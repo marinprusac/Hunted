@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Hunted;
 
 [BepInDependency("nickklmao.menulib")]
-[BepInPlugin("Prussian.Hunted", "Hunted", "0.1.1")]
+[BepInPlugin("Prussian.Hunted", "Hunted", "0.1.2")]
 public class Hunted : BaseUnityPlugin
 {
     internal static Hunted Instance { get; private set; } = null!;

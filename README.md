@@ -1,8 +1,10 @@
 # Hunted
 
+> **Early development.** This mod is being worked on actively and changes often. Expect rough edges, and check the changelog when you update.
+
 A BepInEx mod for R.E.P.O. Install it from [Thunderstore](https://thunderstore.io/c/repo/p/Prussian/Hunted/) with a mod manager such as Gale.
 
-An asymmetric mode for R.E.P.O. in the spirit of Dead by Daylight. One player is **the killer**: invulnerable, fast, huge, armed with a sword, and able to see in the dark. Everyone else is a **survivor** who has to fill the extraction points with valuables and get out through a truck before the killer finds them.
+An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **the killer**: invulnerable, fast, huge, armed with a sword, and able to see in the dark. Everyone else is a **survivor** who has to fill the extraction points with valuables and get out through a truck before the killer finds them.
 
 **Everyone in the lobby needs Hunted and MenuLib, on the same version.** Only the host's settings count, so nobody else has to touch the config.
 

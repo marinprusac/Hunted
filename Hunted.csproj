@@ -5,7 +5,7 @@
     <LangVersion>12</LangVersion>
     <Nullable>enable</Nullable>
     <Authors>Prussian</Authors>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Compile against the installed game (Unity 6 + current Assembly-CSharp) instead of the older NuGet game libs. -->
     <EnableGameReferences>true</EnableGameReferences>

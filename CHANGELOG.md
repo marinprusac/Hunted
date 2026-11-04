@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2
 
 - The killer also wears the skull belt. Their skin is white and every cosmetic item on them is red.
 - The game's seasonal events (Halloween) are always turned off.
