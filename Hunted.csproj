@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <Authors>Prussian</Authors>
+    <Version>0.1.1</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Compile against the installed game (Unity 6 + current Assembly-CSharp) instead of the older NuGet game libs. -->
+    <EnableGameReferences>true</EnableGameReferences>
+    <EnableUnityReferences>true</EnableUnityReferences>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Publicize Include="Assembly-CSharp" />
+    <Reference Include="Photon3Unity3D" Private="false" />
+    <Reference Include="PhotonRealtime" Private="false" />
+    <Reference Include="Unity.Postprocessing.Runtime" Private="false" />
+    <!-- MenuLib draws the killer checkboxes in the lobby (a dependency on Thunderstore: REPOModding-MenuLib). -->
+    <Reference Include="Newtonsoft.Json" HintPath="$(GameDirectory)/REPO_Data/Managed/Newtonsoft.Json.dll" Private="false" />
+    <Reference Include="MenuLib" HintPath="$(BepInExDirectory)/plugins/REPOModding-MenuLib/MenuLib.dll" Private="false" />
+  </ItemGroup>
+
+  <!-- Balance values for testing, compiled into the DLL so players cannot change them. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Tuning.json" LogicalName="Hunted.Tuning.json" />
+    <!-- The default of every setting in the player's config file. -->
+    <EmbeddedResource Include="Defaults.json" LogicalName="Hunted.Defaults.json" />
+  </ItemGroup>
+
+  <!-- Add Package Sources -->
+  <PropertyGroup>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+      https://nuget.windows10ce.com/nuget/v3/index.json
+    </RestoreAdditionalProjectSources>
+  </PropertyGroup>
+
+  <!-- Package References -->
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.1" PrivateAssets="all" IncludeAssets="build" />
+    <PackageReference Include="Linkoid.Repo.Plugin.Build" Version="*" PrivateAssets="all" />
+    
+    <PackageReference Include="BepInEx.Core" Version="5.*" ExcludeAssets="runtime" />
+    
+    
+  </ItemGroup>
+
+</Project>

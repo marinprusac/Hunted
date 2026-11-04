@@ -1,0 +1,30 @@
+{
+  "Killer": {
+    "WalkSpeedMultiplier": 2
+  },
+  "Extraction": {
+    "GoalPerPoint": 10000,
+    "TimeLimitMinutes": 15
+  },
+  "Survivor": {
+    "MaxHealth": 200,
+    "RegenPerSecond": 0.5,
+    "BoostSeconds": 5
+  },
+  "Level": {
+    "Columns": 4,
+    "Rows": 4
+  },
+  "Sword": {
+    "EnergyPerSurvivorHit": 10,
+    "DamagePerHit": 40,
+    "EnergyDrainPerSecond": 0.55,
+    "ChargePerSecond": 10
+  },
+  "Vision": {
+    "KillerFogStart": 5,
+    "KillerFogEnd": 30,
+    "NightVisionRange": 30,
+    "NightVisionIntensity": 1.4
+  }
+}

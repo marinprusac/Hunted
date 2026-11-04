@@ -1,0 +1,72 @@
+{
+  "Vision": {
+    "ProximityRange": 20,
+    "ChargePerSecond": 8,
+    "DecayPerSecond": 1,
+    "FastDecayPerSecond": 3,
+    "CrouchThreshold": 3,
+    "CrawlThreshold": 9,
+    "RevealLingerSeconds": 1,
+    "HitRevealSeconds": 3
+  },
+  "KillerRoom": {
+    "LightIntensityMultiplier": 3,
+    "LightRangeMultiplier": 3,
+    "AlertCooldownSeconds": 3,
+    "MonsterCallIntervalSeconds": 1
+  },
+  "Round": {
+    "StartDelaySeconds": 15,
+    "KillerWinHoldSeconds": 3,
+    "SurvivorEscapeHoldSeconds": 2,
+    "ResultSeconds": 4
+  },
+  "Extraction": {
+    "ExtraRequiredPoints": 0,
+    "ExtraSpawnedPoints": 2
+  },
+  "Monsters": {
+    "MonstersPerTier": 0
+  },
+  "Sword": {
+    "TumbleMultiplier": 0.5,
+    "SwingDetectMultiplier": 0.5
+  },
+  "Map": {
+    "KillerZoomOut": 2.5,
+    "SurvivorZoomOut": 1.5
+  },
+  "Valuables": {
+    "KillerRoomValueMultiplier": 3,
+    "RespawnSeconds": 20,
+    "InitialFillPercent": 60,
+    "MinPlayerDistance": 15
+  },
+  "Killer": {
+    "Scale": 2,
+    "EyeGlow": 6,
+    "EyeLightRange": 4,
+    "EyeLightIntensity": 1.5,
+    "SoundVolumeMultiplier": 2,
+    "SoundRangeMultiplier": 1.5,
+    "SoundPitchMultiplier": 0.75,
+    "RedLightRange": 30,
+    "RedLightIntensity": 1.2,
+    "KillerRoomEmpowerment": 1.5
+  },
+  "Level": {
+    "GridFillPercent": 80
+  },
+  "Rescue": {
+    "FallDepth": 4,
+    "AirSeconds": 1.2,
+    "FloatSpeed": 6,
+    "TeleportAfterSeconds": 6
+  },
+  "Spawn": {
+    "MinKillerDistance": 40
+  },
+  "Boost": {
+    "HealthFraction": 0.5
+  }
+}
