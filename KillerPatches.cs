@@ -29,7 +29,7 @@ static class KillerPatches
 
     private static float _speedFactor = 1f;
 
-    // Faster walking speed (faster still in the killer room). The game only fills playerOriginalMoveSpeed once the level has generated,
+    // Faster walking speed (faster still in the killer room, slower while the sword is in their hands). The game only fills playerOriginalMoveSpeed once the level has generated,
     // so leave MoveSpeed alone until then, and undo our change after the tick so we never overwrite
     // the game's own speed bookkeeping.
     [HarmonyPrefix, HarmonyPatch(typeof(PlayerController), "FixedUpdate")]
@@ -39,7 +39,8 @@ static class KillerPatches
         if (!KillerRole.LocalIsKiller || __instance.playerOriginalMoveSpeed <= 0f)
             return;
         __state = __instance.MoveSpeed;
-        _speedFactor = HuntedConfig.KillerWalkSpeedMultiplier.Value * (KillerRoom.Contains(__instance.transform.position) ? Tuning.Killer.KillerRoomEmpowerment : 1f);
+        _speedFactor = HuntedConfig.KillerWalkSpeedMultiplier.Value * (KillerRoom.Contains(__instance.transform.position) ? Tuning.Killer.KillerRoomEmpowerment : 1f)
+            * (KillerWeapon.Held ? Tuning.Sword.HeldSpeedMultiplier : 1f);
         __instance.MoveSpeed = __state * _speedFactor;
     }
 
@@ -111,6 +112,6 @@ internal static class KillerGrab
         => grab != null
            && (grab.GetComponent<ValuableObject>() != null
                || grab.GetComponentInParent<PhysGrabCart>() != null
-               || grab.GetComponentInParent<EnemyRigidbody>() != null
+               || (grab.GetComponentInParent<EnemyRigidbody>() != null && !Banger.IsHeldBody(grab)) // except the bomber head in their hands
                || grab.GetComponentInParent<PlayerDeathHead>() != null);
 }

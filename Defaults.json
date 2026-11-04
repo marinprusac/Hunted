@@ -3,8 +3,8 @@
     "WalkSpeedMultiplier": 2
   },
   "Extraction": {
-    "GoalPerPoint": 10000,
-    "TimeLimitMinutes": 15
+    "TimeLimitMinutes": 15,
+    "GoalPerPointInHundreds": 100
   },
   "Survivor": {
     "MaxHealth": 200,
@@ -23,8 +23,6 @@
   },
   "Vision": {
     "KillerFogStart": 5,
-    "KillerFogEnd": 30,
-    "NightVisionRange": 30,
-    "NightVisionIntensity": 1.4
+    "KillerFogEnd": 30
   }
 }

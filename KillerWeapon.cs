@@ -43,6 +43,16 @@ internal static class KillerWeapon
         IgnoredSolids.Clear();
     }
 
+    /// <summary>The sword is in the killer's hands right now (not stowed, not lying around).</summary>
+    internal static bool Held
+    {
+        get
+        {
+            var grabObject = Weapon != null ? Weapon.GetComponent<PhysGrabObject>() : null;
+            return grabObject != null && grabObject.grabbed;
+        }
+    }
+
     internal static bool IsWeapon(ItemMelee? melee) => melee != null && Weapon != null && melee == Weapon;
 
     internal static void Tick(float dt)
@@ -68,20 +78,32 @@ internal static class KillerWeapon
     }
 
     private static float _ignoreTimer;
+    private static float _solidTimer;
+
+    /// <summary>A new body (a bot's, when it comes back) is made to be passed through by the sword straight away, not at the next sweep.</summary>
+    internal static void IgnoreBody(Collider body)
+    {
+        if (Weapon == null || body == null)
+            return;
+        foreach (var a in Weapon.GetComponentsInChildren<Collider>(true))
+            if (a != null && a != body)
+                Physics.IgnoreCollision(a, body, true);
+    }
 
     /// <summary>
     /// The weapon's solid body never collides with any player's body: not the killer's (with the larger body the weapon comes out
     /// of the inventory inside it and would knock the killer about) and not the survivors'. A survivor that stopped the sword at
     /// its surface also stopped the swing (the swing needs speed), so the hit box never got to hurt them. Now the sword passes
     /// through, and the hit box (which looks for players by overlap, not by collision) still hits. Walls and everything else
-    /// collide as before (valuables and carts are handled below). New colliders show up now and then (a tumble body, a player's pusher), so this is repeated every second.
+    /// collide as before (valuables and carts are handled below). New colliders show up now and then (a tumble body, a player's pusher, a bot coming back), so
+    /// the bodies are gone over again four times a second.
     /// </summary>
     private static void IgnoreOwnBody(float dt)
     {
         _ignoreTimer -= dt;
         if (_ignoreTimer > 0f || Weapon == null)
             return;
-        _ignoreTimer = 1f;
+        _ignoreTimer = 0.25f;
 
         var weapon = Weapon.GetComponentsInChildren<Collider>(true);
         foreach (var player in SemiFunc.PlayerGetList())
@@ -94,8 +116,20 @@ internal static class KillerWeapon
                         Physics.IgnoreCollision(a, b, true);
         }
 
+        // The bots are bodies like the others.
+        foreach (var bot in Bot.All)
+            if (bot != null)
+                foreach (var b in bot.GetComponentsInChildren<Collider>(true))
+                    foreach (var a in weapon)
+                        if (a != null && b != null && a != b)
+                            Physics.IgnoreCollision(a, b, true);
+
         // The same for valuables and carts: the sword goes through them, so a swing can neither knock them about nor break them.
-        // (The hit box is already set to leave physics objects alone.) Valuables appear over time, so only new colliders are handled.
+        // (The hit box is already set to leave physics objects alone.) Valuables appear over time, so only new colliders are handled, once a second.
+        _solidTimer -= 0.25f;
+        if (_solidTimer > 0f)
+            return;
+        _solidTimer = 1f;
         if (_ignoredFor != Weapon)
         {
             _ignoredFor = Weapon; // a new sword has not ignored anything yet
@@ -380,8 +414,9 @@ static class KillerWeaponPatches
         var battery = __instance.GetComponent<ItemBattery>();
         if (battery == null)
             return;
-        battery.batteryLife -= __instance.durabilityDrainOnEnemiesAndPVP;
+        battery.batteryLife = Mathf.Max(0f, battery.batteryLife - __instance.durabilityDrainOnEnemiesAndPVP);
         battery.TriggerSmallBatteryDeduction();
+        Hunted.Logger.LogDebug($"The sword hit a survivor: -{__instance.durabilityDrainOnEnemiesAndPVP:0.#} energy, {battery.batteryLife:0.0}% left.");
     }
 
     // The killer cannot let go of the weapon; they can only stow it.

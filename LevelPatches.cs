@@ -159,6 +159,38 @@ static class ExtractionPatches
         return __exception;
     }
 
+    /// <summary>True if this spot counts as in the point: whatever is put down there is its haul.</summary>
+    internal static bool InZone(ExtractionPoint point, Vector3 position)
+    {
+        var zone = ZoneColliderOf(point);
+        return zone != null && zone.enabled && zone.gameObject.activeInHierarchy && Inside(zone, position);
+    }
+
+    /// <summary>Where a valuable set down counts for this point: a little above the floor, inside its zone.</summary>
+    internal static Vector3 DropSpotOf(ExtractionPoint point)
+    {
+        var area = point.extractionArea != null ? point.extractionArea.transform.position : point.transform.position;
+        var spot = area + Vector3.up * 0.6f;
+        var zone = ZoneColliderOf(point);
+        if (zone != null && zone.enabled && zone.gameObject.activeInHierarchy && !Inside(zone, spot))
+            spot = zone.bounds.center;
+        return spot;
+    }
+
+    /// <summary>What lies in this point's zone so far, in dollars.</summary>
+    internal static int HaulAt(ExtractionPoint point)
+    {
+        var round = RoundDirector.instance;
+        var zone = ZoneColliderOf(point);
+        if (round == null || zone == null || !zone.enabled || !zone.gameObject.activeInHierarchy)
+            return 0;
+        var sum = 0f;
+        foreach (var go in round.dollarHaulList)
+            if (go != null && Inside(zone, go.transform.position) && go.GetComponent<ValuableObject>() is { } valuable)
+                sum += valuable.dollarValueCurrent;
+        return (int)sum;
+    }
+
     private static Collider? ZoneColliderOf(ExtractionPoint point)
     {
         if (!ZoneColliders.TryGetValue(point, out var collider) || collider == null)

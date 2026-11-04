@@ -27,7 +27,7 @@ internal static class ExtractionState
     /// <summary>Host only.</summary>
     internal static void Init(int required)
     {
-        Goal = HuntedConfig.ExtractionGoal.Value;
+        Goal = HuntedConfig.ExtractionGoalHundreds.Value * 100;
         Required = required;
         RoomSync.Set(RoomKey, $"{Goal}|{Required}");
     }

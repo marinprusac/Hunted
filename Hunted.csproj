@@ -27,6 +27,8 @@
     <EmbeddedResource Include="Tuning.json" LogicalName="Hunted.Tuning.json" />
     <!-- The default of every setting in the player's config file. -->
     <EmbeddedResource Include="Defaults.json" LogicalName="Hunted.Defaults.json" />
+    <!-- The picture of the bomber head in the killer's inventory. -->
+    <EmbeddedResource Include="BangerIcon.png" LogicalName="Hunted.BangerIcon.png" />
   </ItemGroup>
 
   <!-- Add Package Sources -->

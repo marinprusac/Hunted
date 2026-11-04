@@ -398,21 +398,19 @@ static class EndgameEnemyPatches
 /// <summary>The killer room has its own colour on the map, so it is easy to find.</summary>
 internal static class KillerRoomMap
 {
-    private static readonly Color Tint = new(0.85f, 0.02f, 0.02f);
+    private static readonly Color Tint = new(0.35f, 0f, 0f); // dark, so the yellow dots of revealed survivors stand out on it
     private static readonly HashSet<int> Done = new();
 
     internal static void Reset()
     {
         Done.Clear();
         LightsDone.Clear();
-        ClearMarkers();
     }
 
     internal static void Tick()
     {
         if (!KillerRole.ModeActive || !KillerRoom.Ensure())
             return;
-        TrackSurvivors();
         var module = KillerRoom.RoomModule();
         if (module == null)
             return;
@@ -427,7 +425,7 @@ internal static class KillerRoomMap
     private static Color Red(Color color)
     {
         var strength = Mathf.Max(color.r, color.g, color.b);
-        return new Color(strength, strength * 0.1f, strength * 0.1f, color.a);
+        return new Color(strength, 0f, 0f, color.a);
     }
 
     private static void TintLights(Module module)
@@ -451,91 +449,6 @@ internal static class KillerRoomMap
                 continue;
             bulb.originalEmission = Red(bulb.originalEmission);
             bulb.material.SetColor("_EmissionColor", Red(bulb.material.GetColor("_EmissionColor")));
-        }
-    }
-
-    // A survivor inside the killer room shows on the killer's map, as a marker the map's own custom-marker system draws and moves.
-    private static readonly Dictionary<PlayerAvatar, MapCustom> Markers = new();
-    private static Sprite? _dot;
-    private static readonly HashSet<PlayerAvatar> Inside = new();
-    private static float _lastAlert = -100f;
-
-    private static Sprite Dot()
-    {
-        if (_dot != null)
-            return _dot;
-        const int size = 64;
-        var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear };
-        for (var x = 0; x < size; x++)
-        {
-            for (var y = 0; y < size; y++)
-            {
-                var distance = Vector2.Distance(new Vector2(x, y), new Vector2(size / 2f - 0.5f, size / 2f - 0.5f)) / (size / 2f);
-                texture.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.Clamp01((1f - distance) * 8f)));
-            }
-        }
-        texture.Apply();
-        return _dot = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 64f);
-    }
-
-    private static void ClearMarkers()
-    {
-        Inside.Clear();
-        foreach (var marker in Markers.Values)
-            RemoveMarker(marker);
-        Markers.Clear();
-    }
-
-    private static void RemoveMarker(MapCustom? marker)
-    {
-        if (marker == null)
-            return;
-        if (marker.mapCustomEntity != null)
-            Object.Destroy(marker.mapCustomEntity.gameObject);
-        Object.Destroy(marker);
-    }
-
-    private static void TrackSurvivors()
-    {
-        if (!KillerRole.LocalIsKiller || Map.Instance == null || Map.Instance.CustomObject == null)
-        {
-            if (Markers.Count > 0)
-                ClearMarkers();
-            return;
-        }
-
-        foreach (var player in SemiFunc.PlayerGetList())
-        {
-            if (player == null || player.isLocal || KillerRole.IsKiller(player))
-                continue;
-            var inRoom = !player.isDisabled && player.gameObject.activeInHierarchy && KillerRoom.TilesFromRoom(player.transform.position) == 0;
-            var entered = inRoom && Inside.Add(player);
-            if (!inRoom)
-                Inside.Remove(player);
-            // A beep for the killer when someone walks in, at most once per cooldown however often they come and go.
-            if (entered && Time.time - _lastAlert >= Tuning.KillerRoom.AlertCooldownSeconds && AssetManager.instance != null && PlayerAvatar.instance != null)
-            {
-                _lastAlert = Time.time;
-                AssetManager.instance.batteryLowWarning.Play(PlayerAvatar.instance.transform.position, 1.5f);
-            }
-            Markers.TryGetValue(player, out var marker);
-            var shown = marker != null && marker.mapCustomEntity != null;
-            if (inRoom && !shown)
-            {
-                RemoveMarker(marker);
-                marker = player.gameObject.AddComponent<MapCustom>();
-                marker.autoAdd = false;
-                marker.sprite = Dot();
-                marker.color = new Color(1f, 0.25f, 0.2f);
-                marker.fadeAlpha = 1f;
-                marker.Add();
-                Markers[player] = marker;
-            }
-            else if (!inRoom && marker != null)
-            {
-                RemoveMarker(marker);
-                Markers.Remove(player);
-            }
         }
     }
 

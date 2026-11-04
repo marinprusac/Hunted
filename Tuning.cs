@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
-using UnityEngine;
+using Newtonsoft.Json;
 
 namespace Hunted;
 
@@ -23,7 +23,7 @@ internal static class Tuning
         /// <summary>When the charge does not beat DecayPerSecond, the score drains at this rate (less the little charge there is).</summary>
         public float FastDecayPerSecond = 3f;
         /// <summary>The score at which a crouching (or tumbled) survivor becomes visible, and a crawling one. Standing survivors need none (always visible).</summary>
-        public float CrouchThreshold = 3f;
+        public float CrouchThreshold = 1.5f;
         public float CrawlThreshold = 9f;
         /// <summary>The score cannot rise above the threshold by more than this many seconds of decay, and also how long a visible survivor stays visible after getting harder to see (a stance change).</summary>
         public float RevealLingerSeconds = 1f;
@@ -41,6 +41,12 @@ internal static class Tuning
         public float AlertCooldownSeconds = 3f;
         /// <summary>About how often a survivor in the room calls the monsters to where they stand.</summary>
         public float MonsterCallIntervalSeconds = 1f;
+        /// <summary>How big the yellow dot of a revealed survivor is on the killer's map (1 is the picture's full size, a whole room's width).</summary>
+        public float DotScale = 0.3f;
+        /// <summary>How solid the yellow shape of a revealed survivor is where it shows through a wall (0 is invisible, 1 is solid).</summary>
+        public float XrayAlpha = 0.4f;
+        /// <summary>How loud the hum that follows a revealed survivor is (the chime is at the full 1).</summary>
+        public float RevealHumVolume = 0.2f;
     }
 
     [Serializable]
@@ -78,6 +84,8 @@ internal static class Tuning
         public float TumbleMultiplier = 0.5f;
         /// <summary>How fast the sword must move to count as a swing, as a multiple of the game's (1 = the game's; lower is easier to swing).</summary>
         public float SwingDetectMultiplier = 0.5f;
+        /// <summary>The killer's walking speed while the sword is in their hands, as a multiple of their normal speed (0.75 = a quarter slower). Stowing the sword removes it.</summary>
+        public float HeldSpeedMultiplier = 0.75f;
     }
 
     [Serializable]
@@ -105,7 +113,7 @@ internal static class Tuning
     internal class KillerValues
     {
         /// <summary>Size of the killer compared to a normal player: the body (as the others see it), the collision and the eye height. Large values do not fit through the map's doors and corridors.</summary>
-        public float Scale = 1.4f;
+        public float Scale = 1.7f;
         /// <summary>The killer's eyes glow red: how bright the eyes are (emission), and how far and how strongly they light up their surroundings for the others.</summary>
         public float EyeGlow = 6f;
         public float EyeLightRange = 4f;
@@ -154,8 +162,53 @@ internal static class Tuning
     }
 
     [Serializable]
+    internal class BangerValues
+    {
+        /// <summary>How many bomber heads (the game's Bang monster) the killer can have ready at most, and how long one takes to come back (the killer room recharges faster).</summary>
+        public int MaxUses = 3;
+        public float SecondsPerUse = 30f;
+        public float RoomRechargeMultiplier = 2f;
+        /// <summary>How much harder a bomber head's explosion hits compared to the game's, and how many seconds its fuse burns (the game's is 15).</summary>
+        public float DamageMultiplier = 3f;
+        public float FuseSeconds = 5f;
+        /// <summary>A thrown head that has not lit its fuse by then blows up on its own; lighting the fuse stops this.</summary>
+        public float SelfDestructSeconds = 20f;
+        /// <summary>How firmly the killer's hands hold a head (1 is a normal player's grip), for the head's weight and for keeping it pointing straight.</summary>
+        public float HoldStrength = 3f;
+        public float HoldTorque = 3f;
+        /// <summary>A bomber head lights its fuse once it is this close to the survivor it is going for; until then it just walks towards the nearest survivor.</summary>
+        public float IgniteDistance = 6f;
+    }
+
+    [Serializable]
+    internal class SurvivorValues
+    {
+        /// <summary>A survivor's stamina (each stamina upgrade adds 10 on top), and how much faster they sprint than the game's sprint.</summary>
+        public float Stamina = 50f;
+        public float SprintSpeedMultiplier = 1.2f;
+    }
+
+    [Serializable]
+    internal class BotValues
+    {
+        /// <summary>The bots (the stand-ins for survivors, set under the lobby's player list) walk about like real survivors. Off leaves them standing where they are placed.</summary>
+        public bool Moves = true;
+        /// <summary>About how long it hides, crouched or crawling, after it got away.</summary>
+        public float HideSeconds = 10f;
+        /// <summary>Like a survivor, it goes for the valuables lying about, carries them to an extraction point and sets them down in it. Off: it only walks about.</summary>
+        public bool Scavenges = true;
+        /// <summary>It only notices the killer like a survivor does: by sight (in front of it, in the open, within SightRange metres) or by sound (within HearRange metres, even behind a wall). It remembers where it last noticed them for MemorySeconds.</summary>
+        public float SightRange = 30f;
+        public float HearRange = 16f;
+        public float MemorySeconds = 20f;
+    }
+
+    [Serializable]
     private class Data
     {
+        public SurvivorValues Survivor = new();
+        public BotValues Bots = new();
+        public BangerValues Banger = new();
         public VisionValues Vision = new();
         public KillerRoomValues KillerRoom = new();
         public BoostValues Boost = new();
@@ -176,6 +229,9 @@ internal static class Tuning
     internal static VisionValues Vision => _data.Vision;
     internal static KillerRoomValues KillerRoom => _data.KillerRoom;
     internal static BoostValues Boost => _data.Boost;
+    internal static BangerValues Banger => _data.Banger;
+    internal static SurvivorValues Survivor => _data.Survivor;
+    internal static BotValues Bots => _data.Bots;
     internal static RoundValues Round => _data.Round;
     internal static ExtractionValues Extraction => _data.Extraction;
     internal static MonsterValues Monsters => _data.Monsters;
@@ -199,9 +255,11 @@ internal static class Tuning
             }
             using var reader = new StreamReader(stream);
             var loaded = new Data();
-            JsonUtility.FromJsonOverwrite(reader.ReadToEnd(), loaded);
+            // Newtonsoft, not Unity's JsonUtility: JsonUtility silently left every value at its default here (the log showed the killer at the
+            // built-in scale of 1.4 while the file said 2).
+            JsonConvert.PopulateObject(reader.ReadToEnd(), loaded);
             _data = loaded;
-            Hunted.Logger.LogInfo("Tuning values loaded.");
+            Hunted.Logger.LogInfo($"Tuning values loaded (killer scale x{loaded.Killer.Scale:0.##}, sword held speed x{loaded.Sword.HeldSpeedMultiplier:0.##}, bomber head damage x{loaded.Banger.DamageMultiplier:0.##}).");
         }
         catch (Exception e)
         {

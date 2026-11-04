@@ -12,8 +12,12 @@ internal static class KillerRole
 
     internal static string? KillerSteamId { get; private set; }
 
-    /// <summary>Everyone except the killer (at least 1, so a solo test still has something to complete).</summary>
-    internal static int SurvivorCount => Mathf.Max(1, PlayerCountForMode - 1);
+    /// <summary>Every survivor: the players except the killer, and the bots (at least 1, so a lone survivor still has something to complete).</summary>
+    internal static int SurvivorCount => Mathf.Max(1, PlayerSurvivorCount + BotRoster.Count);
+
+    /// <summary>The players who are not the killer. A lone player is a survivor unless they are the killer (ticked in the lobby).</summary>
+    internal static int PlayerSurvivorCount
+        => PlayerCountForMode >= 2 ? PlayerCountForMode - 1 : (KillerSteamId != null || BotRoster.KillerExpected ? 0 : 1);
 
     internal static int PlayerCountForMode => PhotonNetwork.InRoom ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
 
@@ -57,6 +61,8 @@ internal static class KillerRole
 
     private static void ResetLevelState()
     {
+        if (SemiFunc.IsMasterClientOrSingleplayer())
+            BotRoster.HostNewLevel(); // the Bots slider as it is when the level is set up
         SpawnPlanner.Reset();
         KillerRoom.Reset();
         EndgameEnemies.Reset();
@@ -64,8 +70,10 @@ internal static class KillerRole
         ExtractionPoints.Reset();
         ValuableSpawner.Reset();
         KillerWeapon.Reset();
+        Banger.Reset();
         KillerVision.Reset();
         KillerLook.Reset();
+        SurvivorReveal.Reset();
         KillerMap.Reset();
         SecondTruck.Reset();
         KillerRescue.Reset();
@@ -82,7 +90,7 @@ internal static class KillerRole
         KillerRoomRules.Reset();
         KillerAura.Reset();
         KillerBody.Reset();
-        DummySurvivor.Reset();
+        Bot.Reset();
     }
 
     internal static void Sync()

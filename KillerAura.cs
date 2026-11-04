@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Hunted;
 
 /// <summary>
-/// A deep red light all around the killer, like the red stain in Dead by Daylight, so survivors see the killer coming. It is on for everyone, the killer included. It hangs on
+/// A deep red light all around the killer, like the red stain in Dead by Daylight, so survivors see the killer coming. The killer does not see it themselves: it is built on every client, and switched off only on the killer's own. It hangs on
 /// the killer's view camera (every client keeps that in step with the player), so it is built on every client. The killer's body
 /// does not cast shadows (see KillerBody), or it would block the light from the inside.
 /// </summary>
@@ -62,12 +62,12 @@ internal static class KillerAura
 
     private static void Apply(Light light)
     {
-        // On for everyone, the killer included. The killer's own view has no shadows at all: the first-person arms and the weapon sit
-        // right next to the light and would shut it in, and a shadow-casting light that moves with the camera shimmers. For everyone
-        // else the light stops at walls, so the red does not give the killer away from the next room.
-        if (!light.enabled)
-            light.enabled = true;
-        var shadows = !_owner!.isLocal ? LightShadows.Hard : LightShadows.None;
+        // Every computer has its own copy of the light. On the killer's own it is off, so the killer's view is not red; on everybody
+        // else's it is on, and it stops at walls, so the red does not give the killer away from the next room.
+        var visible = !_owner!.isLocal;
+        if (light.enabled != visible)
+            light.enabled = visible;
+        var shadows = visible ? LightShadows.Hard : LightShadows.None;
         if (light.shadows != shadows)
             light.shadows = shadows;
         light.range = Tuning.Killer.RedLightRange;

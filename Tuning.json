@@ -4,16 +4,19 @@
     "ChargePerSecond": 8,
     "DecayPerSecond": 1,
     "FastDecayPerSecond": 3,
-    "CrouchThreshold": 3,
-    "CrawlThreshold": 9,
+    "CrouchThreshold": 1.5,
+    "CrawlThreshold": 8,
     "RevealLingerSeconds": 1,
     "HitRevealSeconds": 3
   },
   "KillerRoom": {
-    "LightIntensityMultiplier": 3,
-    "LightRangeMultiplier": 3,
+    "LightIntensityMultiplier": 2,
+    "LightRangeMultiplier": 2,
     "AlertCooldownSeconds": 3,
-    "MonsterCallIntervalSeconds": 1
+    "MonsterCallIntervalSeconds": 1,
+    "DotScale": 0.3,
+    "XrayAlpha": 0.4,
+    "RevealHumVolume": 0.2
   },
   "Round": {
     "StartDelaySeconds": 15,
@@ -30,7 +33,8 @@
   },
   "Sword": {
     "TumbleMultiplier": 0.5,
-    "SwingDetectMultiplier": 0.5
+    "SwingDetectMultiplier": 0.5,
+    "HeldSpeedMultiplier": 0.75
   },
   "Map": {
     "KillerZoomOut": 2.5,
@@ -43,7 +47,7 @@
     "MinPlayerDistance": 15
   },
   "Killer": {
-    "Scale": 2,
+    "Scale": 1.7,
     "EyeGlow": 6,
     "EyeLightRange": 4,
     "EyeLightIntensity": 1.5,
@@ -65,6 +69,29 @@
   },
   "Spawn": {
     "MinKillerDistance": 40
+  },
+  "Survivor": {
+    "Stamina": 50,
+    "SprintSpeedMultiplier": 1.2
+  },
+  "Bots": {
+    "Moves": true,
+    "HideSeconds": 10,
+    "Scavenges": true,
+    "SightRange": 30,
+    "HearRange": 16,
+    "MemorySeconds": 20
+  },
+  "Banger": {
+    "MaxUses": 3,
+    "SecondsPerUse": 30,
+    "RoomRechargeMultiplier": 2,
+    "DamageMultiplier": 3,
+    "FuseSeconds": 5,
+    "SelfDestructSeconds": 20,
+    "HoldStrength": 3,
+    "HoldTorque": 3,
+    "IgniteDistance": 6
   },
   "Boost": {
     "HealthFraction": 0.5

@@ -7,7 +7,7 @@ using UnityEngine.Rendering.PostProcessing;
 namespace Hunted;
 
 /// <summary>
-/// The killer sees the map through night vision but is poor at spotting survivors. Every survivor has a vision score that the
+/// The killer is poor at spotting survivors. Every survivor has a vision score that the
 /// killer charges while looking towards them and while they are close; walls do not matter. A survivor is visible while their
 /// score is at or above a threshold that depends on how they hide: standing survivors have none (always visible), crouching or
 /// tumbled ones need a medium score, crawling ones a high one. The score drains all the time and is capped just above the
@@ -34,7 +34,7 @@ internal static class KillerVision
         internal bool RenderersLogged;
     }
 
-    /// <summary>What the killer's eyes need to know about someone they might spot: a survivor, or the debug dummy survivor.</summary>
+    /// <summary>What the killer's eyes need to know about someone they might spot: a survivor, or a bot.</summary>
     private readonly struct Subject
     {
         internal Subject(Component key, string name, Vector3 target, bool disabled, bool crouching, bool crawling, bool tumbling, bool exposed)
@@ -58,7 +58,6 @@ internal static class KillerVision
     private static float RevealLingerSeconds => Tuning.Vision.RevealLingerSeconds;
 
     private static readonly Dictionary<Component, Spot> Spots = new();
-    private static GameObject? _nightLight;
     private static float _checkTimer;
 
     internal static void Reset()
@@ -69,9 +68,6 @@ internal static class KillerVision
                 if (renderer != null)
                     renderer.forceRenderingOff = false;
         Spots.Clear();
-        if (_nightLight != null)
-            Object.Destroy(_nightLight);
-        _nightLight = null;
     }
 
     /// <summary>
@@ -91,11 +87,18 @@ internal static class KillerVision
         spot.HurtUntil = Mathf.Max(spot.HurtUntil, Time.time + Tuning.Vision.HitRevealSeconds);
     }
 
+    internal static void RevealHurt(Component key)
+    {
+        if (!Spots.TryGetValue(key, out var spot))
+            Spots[key] = spot = new Spot();
+        spot.HurtUntil = Mathf.Max(spot.HurtUntil, Time.time + Tuning.Vision.HitRevealSeconds);
+    }
+
     internal static void Tick(float dt)
     {
         if (!KillerRole.ModeActive || !KillerRole.LocalIsKiller)
         {
-            if (Spots.Count > 0 || _nightLight != null)
+            if (Spots.Count > 0)
                 Reset();
             return;
         }
@@ -104,7 +107,6 @@ internal static class KillerVision
         if (camera == null)
             return;
 
-        NightVision(camera);
         SteadyFog();
 
         _checkTimer -= dt;
@@ -123,11 +125,11 @@ internal static class KillerVision
             Evaluate(camera, new Subject(player, player.playerName, player.PlayerVisionTarget.VisionTransform.position, player.isDisabled,
                 player.isCrouching, player.isCrawling, player.isTumbling, KillerRoomRules.CannotHide(player)), step);
         }
-        var dummy = DummySurvivor.Current;
-        if (dummy != null)
+        foreach (var bot in Bot.All.ToArray())
         {
-            Evaluate(camera, new Subject(dummy, "the dummy survivor", dummy.TargetPosition, false, dummy.Crouching, false, dummy.Tumbling,
-                KillerRoomRules.CannotHideAt(dummy.transform.position)), step);
+            if (bot != null && bot.Alive)
+                Evaluate(camera, new Subject(bot, bot.Name, bot.TargetPosition, false, bot.Crouching, bot.Crawling, bot.Tumbling,
+                    KillerRoomRules.CannotHideAt(bot.transform.position)), step);
         }
         ApplyVisibility();
     }
@@ -221,7 +223,7 @@ internal static class KillerVision
 
     /// <summary>
     /// Every room has its own fog distance, and the game blends between them as you cross a border, and also cuts the picture off
-    /// at the fog's end. With the killer's brightened night vision and faster walk that shows as a whole room popping into
+    /// at the fog's end. With the killer's faster walk that shows as a whole room popping into
     /// view, going foggy, and the far wall returning as they get closer. The killer gets one steady fog distance everywhere
     /// instead; the camera's cut-off is moved with it, or the far end would still be cut off.
     /// </summary>
@@ -235,35 +237,12 @@ internal static class KillerVision
         director.OverrideFogDistance(new Vector2(start, end), 0.2f);
         director.FarClipPlaneOverride(end + 1f, 0.2f);
     }
-
-    private static void NightVision(Camera camera)
-    {
-        if (_nightLight == null)
-        {
-            _nightLight = new GameObject("Hunted Night Vision");
-            _nightLight.transform.SetParent(camera.transform, false);
-            var light = _nightLight.AddComponent<Light>();
-            light.type = LightType.Point;
-            light.shadows = LightShadows.None;
-            light.color = new Color(0.55f, 1f, 0.6f);
-        }
-        var nightLight = _nightLight.GetComponent<Light>();
-        nightLight.range = HuntedConfig.NightVisionRange.Value;
-        nightLight.intensity = HuntedConfig.NightVisionIntensity.Value;
-
-        var grading = PostProcessing.Instance != null ? PostProcessing.Instance.colorGrading : null;
-        if (grading != null)
-        {
-            grading.colorFilter.value = new Color(0.6f, 1f, 0.65f);
-            grading.postExposure.value = 0.6f;
-        }
-    }
 }
 
 [HarmonyPatch]
 static class KillerVisionPatches
 {
-    // No flashlight for the killer; night vision replaces it.
+    // No flashlight for the killer.
     [HarmonyPatch(typeof(FlashlightController), "Update")]
     [HarmonyPrefix]
     private static void Flashlight_Prefix(FlashlightController __instance)

@@ -27,7 +27,7 @@ internal static class KillerLook
         _cosmeticsFor = null;
     }
 
-    private static readonly Color CosmeticRed = new(0.85f, 0.03f, 0.03f, 1f);
+    private static readonly Color CosmeticRed = new(0.85f, 0f, 0f, 1f);
 
     // The skeleton set, plus the skull belt (which is named "skull", not "skeleton").
     private static bool IsSkeleton(CosmeticAsset? asset) => asset != null
@@ -138,7 +138,7 @@ internal static class KillerLook
                 lightObject.transform.SetParent(white, false);
                 var light = lightObject.AddComponent<Light>();
                 light.type = LightType.Point;
-                light.color = new Color(1f, 0.05f, 0.05f);
+                light.color = new Color(1f, 0f, 0f);
                 light.range = Tuning.Killer.EyeLightRange;
                 light.intensity = Tuning.Killer.EyeLightIntensity;
                 light.shadows = LightShadows.None;

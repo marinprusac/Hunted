@@ -31,15 +31,43 @@ internal static class SpawnPlanner
     internal static bool IsOutsideTruck(LevelPoint point)
         => point != null && !point.Truck && !(point.Room != null && point.Room.Truck);
 
+    private static void EnsurePlan(LevelGenerator generator)
+    {
+        if (_planFor == generator.GetInstanceID())
+            return;
+        Reset();
+        _planFor = generator.GetInstanceID();
+        Build(generator);
+    }
+
+    /// <summary>A survivor's start for a bot: its own spot, away from the killer room and the killer. On any machine (the map's points are everywhere the same).</summary>
+    internal static Vector3? BotSpawn()
+    {
+        var generator = LevelGenerator.Instance;
+        if (generator == null)
+            return null;
+        EnsurePlan(generator);
+        if (_points.Count == 0)
+            return null;
+        ResolveKillerPoint();
+        // As far from each other as from the killer: every bot works its own part of the map.
+        var free = _points.Where(p => !Used.Contains(p) && (KillerRoom.TilesFromRoom(p) ?? 99) >= 2).ToList();
+        if (free.Count == 0)
+            return PickSurvivorPoint();
+        var killer = _killerPoint;
+        var position = free.OrderByDescending(p =>
+        {
+            var apart = Used.Where(u => u != killer).Select(u => Vector3.Distance(u, p)).DefaultIfEmpty(30f).Min();
+            return Mathf.Min(apart, 30f) + 0.5f * (killer != null ? Mathf.Min(Vector3.Distance(p, killer.Value), 40f) : 0f) + Random.Range(0f, 4f);
+        }).First();
+        Used.Add(position);
+        return position;
+    }
+
     internal static bool TryGet(PlayerAvatar player, out Vector3 position)
     {
         var generator = LevelGenerator.Instance;
-        if (_planFor != generator.GetInstanceID())
-        {
-            Reset();
-            _planFor = generator.GetInstanceID();
-            Build(generator);
-        }
+        EnsurePlan(generator);
         if (_points.Count == 0)
         {
             position = default;

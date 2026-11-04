@@ -18,7 +18,7 @@ internal static class SurvivorBoost
 {
     private const string RoomKey = "Hunted.Boost";
     private const string PlayerKey = "Hunted.BoostUntil";
-    private static readonly Color Gold = new(1f, 0.85f, 0.15f);
+    internal static readonly Color Gold = new(1f, 0.85f, 0.15f);
 
     private static float _until; // local player, Time.time
     private static readonly Dictionary<PlayerAvatar, float> Pulse = new();

@@ -93,7 +93,7 @@ static class KillerRoomAmbience
     private static Color Red(Color color, float minimum)
     {
         var strength = Mathf.Max(color.r, color.g, color.b);
-        return new Color(Mathf.Max(strength * 1.5f, minimum), strength * 0.08f, strength * 0.08f, color.a);
+        return new Color(Mathf.Max(strength * 1.5f, minimum), 0f, 0f, color.a);
     }
 
     // The game recomputes the colour every frame, so the red is laid over it every frame, and fades in and out as the player

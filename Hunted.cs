@@ -30,6 +30,8 @@ public class Hunted : BaseUnityPlugin
         MenuLib.MenuAPI.AddElementToLobbyMenu(DebugToggles.Build);
         MenuLib.MenuAPI.AddElementToLobbyMenu(KillerCheckboxes.BuildHeader);
         ConfigSync.Init(Config);
+        Banger.Init();
+        Bot.Init();
         Patch();
 
         Logger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version} has loaded!");
@@ -58,6 +60,7 @@ public class Hunted : BaseUnityPlugin
         LevelNumberPatches.HideLevelUi();
         TruckPatches.KeepKillerOutOfTruck();
         KillerWeapon.Tick(Time.deltaTime);
+        Banger.Tick(Time.deltaTime);
         KillerRescue.Tick(Time.deltaTime);
         KillerVision.Tick(Time.deltaTime);
         KillerMap.Tick(Time.deltaTime);
@@ -66,9 +69,11 @@ public class Hunted : BaseUnityPlugin
         PlayerHealthRules.Tick(Time.deltaTime);
         SurvivorBoost.Tick();
         KillerAura.Tick();
-        DummySurvivor.Tick();
+        SurvivorSprint.Tick();
+        Bot.Tick();
         KillerBody.Tick();
         KillerLook.Tick(Time.deltaTime);
+        SurvivorReveal.Tick(Time.deltaTime);
         _extractionTimer -= Time.unscaledDeltaTime;
         if (_extractionTimer <= 0f)
         {

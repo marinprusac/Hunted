@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -64,6 +65,25 @@ static class MainMenuPatch
         menuButton.buttonText.text = text;
         menuButton.ResizeToText();
         button.gameObject.name = "Menu Button - " + text;
+    }
+}
+
+/// <summary>
+/// "Host Hunted" goes straight to a new game's lobby on the fastest region: no region list to click through (the region is what the list's "Pick Best Region" gives), and no save list.
+/// Saves made without the mod make no sense here, and nothing in a round is worth keeping, so a save is never loaded.
+/// </summary>
+[HarmonyPatch(typeof(MenuPageMain), nameof(MenuPageMain.ButtonEventHostGame))]
+static class HostDirectlyPatch
+{
+    [HarmonyPrefix]
+    private static bool ButtonEventHostGame_Prefix()
+    {
+        DataDirector.instance.networkRegion = "";
+        ServerSettings.ResetBestRegionCodeInPreferences();
+        SemiFunc.MainMenuSetMultiplayer();
+        MenuManager.instance.PageCloseAll();
+        SemiFunc.MenuActionHostGame();
+        return false;
     }
 }
 
