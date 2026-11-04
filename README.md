@@ -15,14 +15,14 @@ An asymmetric mode for R.E.P.O. in the spirit of Dead by Daylight. One player is
 - **The killer wins** when every survivor is dead, or when the time limit (15 minutes by default) runs out first.
 - **Death heads and revives work as in the vanilla game**, so a dead survivor can still be brought back by a teammate.
 - **Valuables.** Only small valuables spawn, and they respawn over time. Carts only appear at extraction points.
-- **No monsters** by default.
+- **No monsters** by default. The game's seasonal events (Halloween) are always turned off.
 
 ## The killer
 
 - Cannot be damaged, tumbled or killed. Cannot sprint or tumble. Is faster than a survivor and much bigger.
 - Carries a **sword** that cannot be dropped, only stowed. It passes through survivors' bodies, so swings are not blocked. It hurts survivors only, and does not damage valuables, carts or monsters. Hits cost sword energy, and the sword slowly drains on its own. The energy recharges while the killer is in the killer room.
 - Cannot pick up valuables, carts, monsters or survivors' heads, and cannot enter the trucks. Monsters, the Museum's red-light-green-light robot and other map hazards ignore the killer.
-- Has night vision, a steady fog distance in every room, a zoomed-out map and a red light. Looks like a white skeleton with glowing red eyes.
+- Has night vision, a steady fog distance in every room, a zoomed-out map and a red light. Has white skin, a red skeleton outfit (with the skull belt) and glowing red eyes.
 - **In the killer room** the killer walks faster, hits harder and the lights are brighter. Nobody can hide there, and a survivor inside shows as a red dot on the killer's map, with a beep.
 - If the killer falls into a hole, they float back out.
 

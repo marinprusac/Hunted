@@ -49,6 +49,7 @@ public class Hunted : BaseUnityPlugin
 
     private void Update()
     {
+        NoSeasonalEvent.Tick();
         ConfigSync.Tick();
         KillerCheckboxes.Tick();
         DebugToggles.Tick();

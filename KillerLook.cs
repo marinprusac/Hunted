@@ -27,9 +27,13 @@ internal static class KillerLook
         _cosmeticsFor = null;
     }
 
-    private static bool IsSkeleton(CosmeticAsset? asset) => asset != null && asset.name.IndexOf("skeleton", System.StringComparison.OrdinalIgnoreCase) >= 0;
+    private static readonly Color CosmeticRed = new(0.85f, 0.03f, 0.03f, 1f);
 
-    /// <summary>The game's indices of every skeleton cosmetic (overlays, armor, teeth, grabber).</summary>
+    // The skeleton set, plus the skull belt (which is named "skull", not "skeleton").
+    private static bool IsSkeleton(CosmeticAsset? asset) => asset != null
+        && (asset.name.IndexOf("skeleton", System.StringComparison.OrdinalIgnoreCase) >= 0 || asset.name.IndexOf("skull belt", System.StringComparison.OrdinalIgnoreCase) >= 0);
+
+    /// <summary>The game's indices of every skeleton cosmetic (overlays, armor, teeth, grabber) and the skull belt.</summary>
     internal static int[] SkeletonIndices()
     {
         var assets = MetaManager.instance != null ? MetaManager.instance.cosmeticAssets : null;
@@ -75,8 +79,8 @@ internal static class KillerLook
     }
 
     /// <summary>
-    /// The whole outfit is white: the player colour is replaced by white on every part, and the cosmetics that are not tinted by it
-    /// (the skeleton ones) lose their own colour too. The surface's relief and the lighting still show its shape. The eyes are left alone.
+    /// The killer's skin (the body itself) is white and every cosmetic item on it is red: the player colour is replaced on every part, and the cosmetics
+    /// that are not tinted by it (the skeleton ones) lose their own colour too. The surface's relief and the lighting still show its shape. The eyes are left alone.
     /// </summary>
     internal static void WhitenOutfit(PlayerCosmetics cosmetics)
     {
@@ -88,12 +92,13 @@ internal static class KillerLook
             if (material == null || eyeParts.Any(e => e != null && part!.transform.IsChildOf(e)))
                 continue;
             var albedo = material.HasProperty("_AlbedoColor") ? material.GetColor("_AlbedoColor") : Color.white;
-            SetColor(material, "_AlbedoColor", new Color(1f, 1f, 1f, albedo.a));
+            var colour = part!.cosmetic != null ? CosmeticRed : Color.white; // cosmetic items know their cosmetic; the body does not
+            SetColor(material, "_AlbedoColor", new Color(colour.r, colour.g, colour.b, albedo.a));
             SetTexture(material, "_AlbedoTexture", Texture2D.whiteTexture);
-            if (part!.tintType != PlayerMaterial.TintType.Albedo)
+            if (part.tintType != PlayerMaterial.TintType.Albedo)
                 SetColor(material, "_EmissionColor", Color.black); // a glow in the player's colour would stay coloured
             if (part.tintFresnel)
-                SetColor(material, "_FresnelColor", Color.white);
+                SetColor(material, "_FresnelColor", colour);
         }
     }
 
