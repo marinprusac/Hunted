@@ -27,6 +27,8 @@ An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **t
 - **Map:** zoomed out, but shows no heads, carts, items or valuables.
 - **Falling:** the killer floats back out of holes.
 
+![A bomber head closing in](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/bomber-head-closeup.jpg)
+
 ## How the killer finds survivors
 
 - **Standing** survivors are always visible, even through walls.
@@ -48,14 +50,6 @@ A slider in the lobby adds up to 5 bot survivors, with any number of players. Th
 Singleplayer, Public Game and Tutorial are hidden while the mod is installed. Use **Host Hunted** or **Join Hunted** in the main menu, and disable the mod to play the normal game.
 
 If you play alone, nobody is the killer unless you tick your own box, and a killer on their own needs at least one bot.
-
-## Screenshots
-
-![A bomber head closing in](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/bomber-head-closeup.jpg)
-
-![The killer and a bomber head in a bedroom](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-bedroom-bomber-head.jpg)
-
-![The killer's eyes in a dark doorway](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-doorway.jpg)
 
 ## Settings
 
