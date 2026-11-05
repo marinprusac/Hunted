@@ -51,17 +51,11 @@ If you play alone, nobody is the killer unless you tick your own box, and a kill
 
 ## Screenshots
 
-![The killer in a bedroom doorway](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-bedroom.jpg)
-
 ![A bomber head closing in](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/bomber-head-closeup.jpg)
-
-![The killer with a bomber head](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-bomber-head.jpg)
 
 ![The killer and a bomber head in a bedroom](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-bedroom-bomber-head.jpg)
 
 ![The killer's eyes in a dark doorway](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-doorway.jpg)
-
-![The killer at the end of a dark corridor](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-corridor.jpg)
 
 ## Settings
 
