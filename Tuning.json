@@ -34,7 +34,8 @@
   "Sword": {
     "TumbleMultiplier": 0.5,
     "SwingDetectMultiplier": 0.5,
-    "HeldSpeedMultiplier": 0.75
+    "HeldSpeedMultiplier": 0.75,
+    "Scale": 1.7
   },
   "Map": {
     "KillerZoomOut": 2.5,
@@ -48,6 +49,8 @@
   },
   "Killer": {
     "Scale": 1.7,
+    "ExposureBoost": 0.5,
+    "BrightnessBoost": 15,
     "EyeGlow": 6,
     "EyeLightRange": 4,
     "EyeLightIntensity": 1.5,
@@ -59,7 +62,9 @@
     "KillerRoomEmpowerment": 1.5
   },
   "Level": {
-    "GridFillPercent": 80
+    "GridFillPercent": 80,
+    "Columns": 3,
+    "MinRows": 4
   },
   "Rescue": {
     "FallDepth": 4,

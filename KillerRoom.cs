@@ -65,8 +65,14 @@ internal static class KillerRoom
         if (rooms.Count == 0)
             return false;
 
-        var closest = rooms.Min(DistanceToCentre);
-        _tile = rooms.Where(t => DistanceToCentre(t) <= closest + 0.01f).OrderBy(_ => Random.value).First();
+        // The room the layout kept for it, unless the game has merged that one into a bigger room since.
+        var planned = GridPatch.KillerCell;
+        _tile = planned != null ? rooms.FirstOrDefault(t => t.x == planned.Value.x && t.y == planned.Value.y) : null;
+        if (_tile == null)
+        {
+            var closest = rooms.Min(DistanceToCentre);
+            _tile = rooms.Where(t => DistanceToCentre(t) <= closest + 0.01f).OrderBy(_ => Random.value).First();
+        }
         var centre = generator.GridGetTilePosition(_tile.x, _tile.y);
         var half = LevelGenerator.ModuleWidth * LevelGenerator.TileSize / 2f;
 

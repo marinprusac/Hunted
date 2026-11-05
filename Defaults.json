@@ -4,20 +4,16 @@
   },
   "Extraction": {
     "TimeLimitMinutes": 15,
-    "GoalPerPointInHundreds": 100
+    "GoalPerPointInHundreds": 150
   },
   "Survivor": {
     "MaxHealth": 200,
     "RegenPerSecond": 0.5,
     "BoostSeconds": 5
   },
-  "Level": {
-    "Columns": 4,
-    "Rows": 4
-  },
   "Sword": {
     "EnergyPerSurvivorHit": 10,
-    "DamagePerHit": 40,
+    "DamagePerHit": 35,
     "EnergyDrainPerSecond": 0.55,
     "ChargePerSecond": 10
   },

@@ -86,6 +86,8 @@ internal static class Tuning
         public float SwingDetectMultiplier = 0.5f;
         /// <summary>The killer's walking speed while the sword is in their hands, as a multiple of their normal speed (0.75 = a quarter slower). Stowing the sword removes it.</summary>
         public float HeldSpeedMultiplier = 0.75f;
+        /// <summary>Size of the sword compared to the game's (1 = the game's). Its hit box and reach grow with it, and everyone sees the same size.</summary>
+        public float Scale = 1.7f;
     }
 
     [Serializable]
@@ -114,6 +116,9 @@ internal static class Tuning
     {
         /// <summary>Size of the killer compared to a normal player: the body (as the others see it), the collision and the eye height. Large values do not fit through the map's doors and corridors.</summary>
         public float Scale = 1.7f;
+        /// <summary>How much brighter the picture is on the killer's screen: added to the camera's exposure (in stops) and brightness (-100 to 100). The colour grading mode uses one of them.</summary>
+        public float ExposureBoost = 0.5f;
+        public float BrightnessBoost = 15f;
         /// <summary>The killer's eyes glow red: how bright the eyes are (emission), and how far and how strongly they light up their surroundings for the others.</summary>
         public float EyeGlow = 6f;
         public float EyeLightRange = 4f;
@@ -134,6 +139,10 @@ internal static class Tuning
     {
         /// <summary>How full the map's inner grid is (40 to 100). Higher means a denser map with more connections and loops.</summary>
         public int GridFillPercent = 80;
+        /// <summary>Columns of rooms in the map's inner grid. The extraction rooms and dead ends sit in an extra column on each side.</summary>
+        public int Columns = 3;
+        /// <summary>Rows of rooms a map has at least. It gets more when the extraction rooms need them.</summary>
+        public int MinRows = 4;
     }
 
     [Serializable]

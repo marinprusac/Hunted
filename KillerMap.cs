@@ -1,4 +1,5 @@
 using System.Linq;
+using HarmonyLib;
 using UnityEngine;
 
 namespace Hunted;
@@ -28,7 +29,10 @@ internal static class KillerMap
         {
             _revealTimer = 1f;
             if (killer)
+            {
                 RevealRooms();
+                KillerMapObjects.Sweep();
+            }
             FindCamera();
         }
         ApplyZoom(killer ? Tuning.Map.KillerZoomOut : Tuning.Map.SurvivorZoomOut);
@@ -71,5 +75,45 @@ internal static class KillerMap
             _camera.orthographicSize = _baseSize * zoomOut;
         else
             _camera.fieldOfView = Mathf.Min(170f, Mathf.Atan(Mathf.Tan(_baseFov * 0.5f * Mathf.Deg2Rad) * zoomOut) * 2f * Mathf.Rad2Deg);
+    }
+}
+
+/// <summary>
+/// The killer hunts by eye. Their map shows neither valuables nor anything else that lies about (heads, carts, items), and looking at these does not "discover" them: no outline, and nothing
+/// that would show up for the survivors either. What the mod itself reveals on the killer's map (survivors) is not on a physics object, and stays.
+/// </summary>
+[HarmonyPatch]
+static class KillerMapObjects
+{
+    private static bool LiesAbout(MapCustom custom) => custom != null && custom.GetComponentInParent<PhysGrabObject>(true) != null;
+
+    [HarmonyPrefix, HarmonyPatch(typeof(Map), nameof(Map.AddValuable))]
+    private static bool AddValuable_Prefix() => !KillerRole.LocalIsKiller;
+
+    [HarmonyPrefix, HarmonyPatch(typeof(Map), nameof(Map.AddCustom))]
+    private static bool AddCustom_Prefix(MapCustom mapCustom) => !(KillerRole.LocalIsKiller && LiesAbout(mapCustom));
+
+    /// <summary>What was put on the map before this machine knew who the killer is.</summary>
+    internal static void Sweep()
+    {
+        foreach (var dot in Object.FindObjectsByType<MapValuable>(FindObjectsSortMode.None))
+            Object.Destroy(dot.gameObject);
+        foreach (var dot in Object.FindObjectsByType<MapCustomEntity>(FindObjectsSortMode.None))
+            if (LiesAbout(dot.mapCustom))
+                Object.Destroy(dot.gameObject);
+    }
+
+    [HarmonyPrefix, HarmonyPatch(typeof(PhysGrabber), "DiscoverLogic")]
+    private static bool DiscoverLogic_Prefix(PhysGrabber __instance) => !(__instance.isLocal && KillerRole.LocalIsKiller);
+
+    [HarmonyPrefix, HarmonyPatch(typeof(ValuableDiscover), nameof(ValuableDiscover.New))]
+    private static bool New_Prefix() => !KillerRole.LocalIsKiller;
+
+    // Seeing a head is an event for a survivor (a scare, an outline, and it goes on everyone's map). For the killer it already counts as seen, so none of that happens.
+    [HarmonyPrefix, HarmonyPatch(typeof(PlayerDeathHead), "Update")]
+    private static void Head_Prefix(PlayerDeathHead __instance)
+    {
+        if (__instance.triggered && !__instance.localSeen && KillerRole.LocalIsKiller)
+            __instance.localSeen = true;
     }
 }

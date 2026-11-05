@@ -1,15 +1,38 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
-- "Host Hunted" goes straight to the lobby of a new game on the fastest region. There is no region list and no save list any more, so old saves cannot be loaded.
-- Survivors have 50 stamina and sprint 20% faster. Bots run on the same stamina and speed as players.
-- Settings with big values are whole numbers now, so the sliders move in steps of 1: the time limit, the killer's fog distances, the sword's energy per hit and charge rate, and the boost length. The extraction goal is a count of hundreds of dollars (`GoalPerPointInHundreds`, 100 is $10,000, steps of $100), which replaces `GoalPerPoint`: set it again if you had changed it. Health regeneration tops out at 10 per second.
-- The "Dummy survivor" testing switch is now a **Bots** slider (0 to 5) that works with any number of players. Bots look like survivors (the game's player model in a random flat colour), walk and run with the player animations and footsteps, start far from the killer like a survivor, bring the valuables worth the walk to the extraction point closest to done, know how the killer's vision works and use stance to stay unseen, share sightings, flee along routes that cannot be cut off, hide in real hiding spots (the map's own hiding volumes, under furniture, alcoves) rather than in the open, avoid bomber heads and the killer room, and leave a real death head when killed, which revives them in an extraction point as it completes or in an open truck; other bots carry heads there too. Bots are real player avatars that the host drives. Everyone sees them (the host runs them). They take damage from everything that hurts players, tumble with real physics, and glow gold during the boost. They count as survivors: for the number of extraction points, for the killer's win (all of them dead as well) and for the survivors' win (the living ones in a truck, which they head for once the trucks open, going to the back of it, out of the sword's reach from the door). With just the killer in the lobby, the game cannot be started without at least one bot.
-- Revealing a survivor is now one effect that anything can use (the killer room today): a yellow shape seen through walls (only where something is in the way), a yellow dot on the killer's map, a deep chime from the survivor's direction, and a quiet hum from them for as long as they are revealed. The dot is smaller and yellow now.
-- The killer no longer has night vision (and the two night-vision settings are gone), and still has no flashlight. The killer no longer sees their own red light; survivors still do.
-- New: bomber heads. The killer has them in inventory slot 2 (a skull with dynamite, three charge bars): three uses, one comes back every 30 seconds, twice as fast in the killer room. The key puts a real bomber head in the killer's hands; letting go of it throws it. A thrown head hunts the nearest survivor at the killer's speed, and blows up 5 seconds after its fuse is lit, for triple the damage; one that never gets close blows up by itself after 20 seconds.
-- The killer walks 25% slower while the sword is in their hands. Stowing the sword restores their full speed.
+**Bots**
+- Add up to 5 bot survivors with a slider in the lobby, with any number of players.
+- Bots gather valuables and deliver them, sneak, run from the killer, hide, carry each other's heads to safety and escape in the trucks.
+- They get hurt, tumble and die like players, and they count as survivors for the win conditions and the number of extraction points. Players cannot grab them.
+
+**Killer**
+- New: bomber heads, in inventory slot 2. There are three uses, and one comes back every 30 seconds (twice as fast in the killer room). Throw one and it hunts the nearest survivor, then explodes for triple damage.
+- The sword is 1.7 times bigger, with longer reach, and now does 35 damage instead of 40.
+- The killer walks 25% slower with the sword in their hands. Stowing it restores full speed.
+- The killer is now 1.7 times a player's size instead of 2.
+- The killer's view is brighter, but they no longer have night vision and no longer see their own red light.
+- The killer's map no longer shows heads, carts, items or valuables, and looking at them no longer outlines them.
+- The energy bar no longer floats over the sword on the killer's screen.
+- Crouching survivors are noticed about twice as fast, and crawling ones slightly faster.
+
+**Killer room**
+- A survivor inside is now revealed by a yellow shape through walls, a yellow dot on the map, a chime from their direction and a quiet hum.
+- The killer room's lights are less bright.
+
+**Survivors**
+- Survivors have 50 stamina and sprint 20% faster.
+
+**Map**
+- The map grows to fit the extraction points the survivors need.
+- The map is 3 rooms wide with the killer room in the middle column. The Rows and Columns settings are gone.
+
+**Lobby and settings**
+- "Host Hunted" goes straight to a new lobby. There is no region or save list any more, so old saves cannot be loaded.
+- The time limit, fog distances, sword energy and boost length sliders now move in whole steps.
+- Each extraction point now needs $15,000 by default, up from $10,000.
+- The extraction goal is now set in hundreds of dollars (`GoalPerPointInHundreds`). If you had changed `GoalPerPoint`, set it again.
 
 ## 0.1.2
 

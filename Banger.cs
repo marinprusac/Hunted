@@ -118,7 +118,9 @@ internal static class Banger
         // Held the way a survivor holds something: the killer's own grab is kept on the head every frame.
         var body = _heldBang != null && _heldBang.enemy != null ? _heldBang.enemy.Rigidbody : null;
         if (body != null && body.physGrabObject != null && PhysGrabber.instance != null && _heldBang!.enemy.EnemyParent.Spawned)
+        {
             PhysGrabber.instance.OverrideGrab(body.physGrabObject);
+        }
     }
 
     /// <summary>A slot key was pressed. Returns true when the game should handle the press itself.</summary>
@@ -629,6 +631,11 @@ static class BangerPatches
         var tag = __instance.GetComponent<BangerTag>();
         return tag == null || !tag.Held || _state == EnemyBang.State.Despawn || _state == EnemyBang.State.Spawn || _state == EnemyBang.State.Idle;
     }
+
+    // A head in the killer's hands does not react to survivors it sees. Reacting would not just be wrong: the game's reaction calls itself for every head within 2 m, itself included,
+    // and relies on the state change above to stop. A held head does not change state, so the call would never end, and the game would hang.
+    [HarmonyPrefix, HarmonyPatch(typeof(EnemyBang), nameof(EnemyBang.OnVision))]
+    private static bool OnVision_Prefix(EnemyBang __instance) => __instance.GetComponent<BangerTag>() is not { Held: true };
 
     // Each head thinks for itself (see Banger.Think).
     [HarmonyPrefix, HarmonyPatch(typeof(EnemyBang), "Update")]

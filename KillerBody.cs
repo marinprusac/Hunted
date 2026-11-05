@@ -40,9 +40,12 @@ internal static class KillerBody
 
     private static float _shadowTimer;
     private static float? _baseEyeOffset;
+    private static float? _baseCrouchDrop;
+    private static float? _baseCrawlDrop;
 
     // The killer's own screen cannot show their body (a first-person view has none), so the size shows in how high they see from:
-    // the camera is raised by the extra height (about 1.7 m of eye height times the scale's excess).
+    // the camera is raised by the extra height (about 1.7 m of eye height times the scale's excess). Crouching and crawling lower it
+    // by as much more as the body is bigger, or the eyes would stay above a crouching body.
     private static void RaiseEyes(PlayerAvatar killer)
     {
         var camera = CameraPosition.instance;
@@ -52,6 +55,21 @@ internal static class KillerBody
         var offset = camera.playerOffset;
         offset.y = _baseEyeOffset.Value + (Tuning.Killer.Scale - 1f) * 1.7f;
         camera.playerOffset = offset;
+
+        var crouch = CameraCrouchPosition.instance;
+        var crawl = CameraCrawlPosition.instance;
+        if (crouch != null && _baseCrouchDrop == null)
+        {
+            _baseCrouchDrop = crouch.Position;
+            crouch.Position *= Tuning.Killer.Scale;
+            Hunted.Logger.LogDebug($"Killer's eyes: raised {offset.y - _baseEyeOffset.Value:0.##} m to an offset of {offset.y:0.##}, crouch drop {_baseCrouchDrop:0.##} -> {crouch.Position:0.##}.");
+        }
+        if (crawl != null && _baseCrawlDrop == null)
+        {
+            _baseCrawlDrop = crawl.Position;
+            crawl.Position *= Tuning.Killer.Scale;
+            Hunted.Logger.LogDebug($"Killer's eyes: crawl drop {_baseCrawlDrop:0.##} -> {crawl.Position:0.##}.");
+        }
     }
 
     private static void RestoreEyes()
@@ -64,6 +82,12 @@ internal static class KillerBody
             camera.playerOffset = offset;
         }
         _baseEyeOffset = null;
+        if (CameraCrouchPosition.instance != null && _baseCrouchDrop != null)
+            CameraCrouchPosition.instance.Position = _baseCrouchDrop.Value;
+        _baseCrouchDrop = null;
+        if (CameraCrawlPosition.instance != null && _baseCrawlDrop != null)
+            CameraCrawlPosition.instance.Position = _baseCrawlDrop.Value;
+        _baseCrawlDrop = null;
     }
 
     // The killer's body must not cast shadows: the red light sits at their head, and their own (now larger) model would shut it in.

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Hunted;
 
 [BepInDependency("nickklmao.menulib")]
-[BepInPlugin("Prussian.Hunted", "Hunted", "0.1.2")]
+[BepInPlugin("Prussian.Hunted", "Hunted", "0.2.0")]
 public class Hunted : BaseUnityPlugin
 {
     internal static Hunted Instance { get; private set; } = null!;
@@ -49,6 +49,8 @@ public class Hunted : BaseUnityPlugin
         Harmony?.UnpatchSelf();
     }
 
+    private void LateUpdate() => KillerWeapon.KeepSize();
+
     private void Update()
     {
         NoSeasonalEvent.Tick();
@@ -62,6 +64,7 @@ public class Hunted : BaseUnityPlugin
         KillerWeapon.Tick(Time.deltaTime);
         Banger.Tick(Time.deltaTime);
         KillerRescue.Tick(Time.deltaTime);
+        KillerBrightness.Tick();
         KillerVision.Tick(Time.deltaTime);
         KillerMap.Tick(Time.deltaTime);
         KillerHud.Tick();

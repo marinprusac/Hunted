@@ -242,6 +242,42 @@ internal static class KillerVision
     }
 }
 
+/// <summary>The killer sees a little better in the dark: the picture itself is brighter on their screen, through the camera's exposure. The game's Gamma setting and the lighting stay as they are.</summary>
+internal static class KillerBrightness
+{
+    private static ColorGrading? _grading;
+    private static bool _exposureWasOn;
+    private static float _exposure;
+    private static bool _brightnessWasOn;
+    private static float _brightness;
+
+    internal static void Tick()
+    {
+        var want = KillerRole.ModeActive && KillerRole.LocalIsKiller && LevelGenerator.Instance != null && LevelGenerator.Instance.Generated;
+        var grading = PostProcessing.Instance != null ? PostProcessing.Instance.colorGrading : null;
+        if (want && grading != null && _grading != grading)
+        {
+            _grading = grading;
+            _exposureWasOn = grading.postExposure.overrideState;
+            _exposure = grading.postExposure.value;
+            _brightnessWasOn = grading.brightness.overrideState;
+            _brightness = grading.brightness.value;
+            // Which of the two counts depends on the colour grading mode of the game's profile; each mode ignores the other's.
+            grading.postExposure.Override(_exposure + Tuning.Killer.ExposureBoost);
+            grading.brightness.Override(_brightness + Tuning.Killer.BrightnessBoost);
+            Hunted.Logger.LogDebug($"Killer's picture brightened (grading mode {grading.gradingMode.value}).");
+        }
+        else if (!want && _grading != null)
+        {
+            _grading.postExposure.value = _exposure;
+            _grading.postExposure.overrideState = _exposureWasOn;
+            _grading.brightness.value = _brightness;
+            _grading.brightness.overrideState = _brightnessWasOn;
+            _grading = null;
+        }
+    }
+}
+
 [HarmonyPatch]
 static class KillerVisionPatches
 {

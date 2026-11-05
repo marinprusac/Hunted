@@ -77,6 +77,24 @@ internal static class KillerWeapon
             KeepSurvivorsOff();
     }
 
+    /// <summary>
+    /// The sword is bigger than the game's, on every client. The game's stow animation always unpacks an item to a scale of 1, so the size is put back after coroutines have run
+    /// each frame and before the frame is drawn. A stowed or stowing sword is left to the game, which shrinks it from whatever size it has.
+    /// </summary>
+    internal static void KeepSize()
+    {
+        if (!KillerRole.ModeActive || Weapon == null)
+            return;
+        var equippable = Weapon.GetComponent<ItemEquippable>();
+        if (equippable == null || equippable.isEquipping || (equippable.isEquipped && !equippable.isUnequipping))
+            return;
+        var transform = Weapon.transform;
+        // While it unpacks, the game sets the animated scale anew each frame, so this does not add up.
+        var size = equippable.isUnequipping ? transform.localScale * Tuning.Sword.Scale : Vector3.one * Tuning.Sword.Scale;
+        if (transform.localScale != size)
+            transform.localScale = size;
+    }
+
     private static float _ignoreTimer;
     private static float _solidTimer;
 
@@ -351,6 +369,18 @@ internal static class KillerWeapon
 static class KillerWeaponPatches
 {
     private static (float time, float force, float torque)? _baseTumble;
+
+    // The bar that floats above the sword. On the killer's own screen it covers what they are aiming at, and the game's on-screen bar already shows the energy while they hold it, so it is
+    // shrunk to nothing there. Everyone else sees it at its usual size: it hangs under the sword, so it would otherwise grow with it.
+    [HarmonyPostfix, HarmonyPatch(typeof(ItemBattery), "BatteryLookAt")]
+    private static void BatteryLookAt_Postfix(ItemBattery __instance)
+    {
+        var weapon = KillerWeapon.Weapon;
+        var bar = __instance.batteryTransform;
+        if (weapon == null || bar == null || __instance.gameObject != weapon.gameObject)
+            return;
+        bar.localScale = KillerRole.LocalIsKiller ? Vector3.zero : bar.localScale / Mathf.Max(Tuning.Sword.Scale, 0.01f);
+    }
 
     // Outside the arena and shop, vanilla melee hurt colliders do 0 damage to players. The killer's weapon hurts
     // survivors, and ignores enemies and physics objects (so valuables are never damaged).

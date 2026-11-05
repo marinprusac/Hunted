@@ -16,8 +16,6 @@ internal static class HuntedConfig
     internal static ConfigEntry<int> MaxHealth = null!;
     internal static ConfigEntry<float> HealthRegenPerSecond = null!;
     internal static ConfigEntry<int> BoostSeconds = null!;
-    internal static ConfigEntry<int> GridColumns = null!;
-    internal static ConfigEntry<int> GridRows = null!;
 
     internal static void Bind(ConfigFile config)
     {
@@ -33,12 +31,6 @@ internal static class HuntedConfig
         BoostSeconds = config.Bind("Survivor", "BoostSeconds", ConfigDefaults.Get<int>("Survivor", "BoostSeconds"),
             new ConfigDescription("A survivor who is revived, or hit down to half their maximum health or less, runs without tiring and cannot be tumbled by anything but themselves for this long. 0 turns the boost off.",
                 new AcceptableValueRange<int>(0, 20)));
-        GridColumns = config.Bind("Level", "Columns", ConfigDefaults.Get<int>("Level", "Columns"),
-            new ConfigDescription("Columns of rooms in the map's inner grid. The extraction rooms and dead ends sit in an extra column on each side.",
-                new AcceptableValueRange<int>(3, 10)));
-        GridRows = config.Bind("Level", "Rows", ConfigDefaults.Get<int>("Level", "Rows"),
-            new ConfigDescription("Rows of rooms in the map's inner grid. The trucks sit outside the first and last row. More rows leave more room for extraction rooms and dead ends.",
-                new AcceptableValueRange<int>(3, 10)));
         EnergyPerSurvivorHit = config.Bind("Sword", "EnergyPerSurvivorHit", ConfigDefaults.Get<int>("Sword", "EnergyPerSurvivorHit"),
             new ConfigDescription("Host only. Energy (out of 100) the sword loses when it hits a survivor.", new AcceptableValueRange<int>(0, 100)));
         WeaponDamage = config.Bind("Sword", "DamagePerHit", ConfigDefaults.Get<int>("Sword", "DamagePerHit"),

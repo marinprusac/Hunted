@@ -23,6 +23,9 @@ internal static class ExtractionHost
             var required = Mathf.Min(LevelPatches.ExtractionAmountPatch.Required, points.Count);
             ExtractionState.Init(required);
             Hunted.Logger.LogInfo($"{required} of {points.Count} extraction points must be completed, goal ${ExtractionState.Goal} each.");
+            var wanted = LevelPatches.ExtractionAmountPatch.Required + Tuning.Extraction.ExtraSpawnedPoints;
+            if (points.Count < wanted)
+                Hunted.Logger.LogWarning($"Only {points.Count} of the {wanted} extraction points wanted fit on the map.");
         }
 
         // Each point asks for haulGoal / extractionPoints, so this gives every point the configured amount.
