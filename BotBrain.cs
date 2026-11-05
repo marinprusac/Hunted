@@ -95,9 +95,13 @@ internal partial class Bot
     private static NavMeshPath? _scratch; // made on first use: Unity does not allow it while a behaviour is being constructed
     private readonly List<(Vector3 position, bool lit)> _bangs = new();
 
-    private readonly HashSet<int> _headsSeen = new();
-    private int _targetHead = -1;
-    private int _carriedHead = -1;
+    /// <summary>What blocks a bot's sight. Not bodies: a survivor or the killer does not hide what is behind them, or themselves.</summary>
+    private static int SightMask => _sightMask != 0 ? _sightMask : _sightMask = (int)SemiFunc.LayerMaskGetVisionObstruct() & ~LayerMask.GetMask("Player");
+    private static int _sightMask;
+
+    private readonly HashSet<PlayerDeathHead> _headsSeen = new();
+    private PlayerDeathHead? _targetHead;
+    private PlayerDeathHead? _carriedHead;
     private float _thinkAt;
     private float _glanceAt;
     private bool _seen;
@@ -120,6 +124,7 @@ internal partial class Bot
     private bool _jogging;
     private bool _routed;
     private Vector3 _pointWalk;
+    private Vector3? _restSpot;
     private ValuableObject? _reclaim;
     private ExtractionPoint? _avoidPoint;
     private float _avoidUntil;
@@ -128,6 +133,8 @@ internal partial class Bot
     private int _stuck;
     private float _scanYaw;
     private float _scanAt;
+
+    private const float RunWithinMetres = 10f;
 
     private float MemorySeconds => Tuning.Bots.MemorySeconds;
     private float BoostLeft => Mathf.Max(0f, _boostUntil - Time.time);
@@ -203,7 +210,7 @@ internal partial class Bot
         if (glance)
             _glanceAt = Time.time + (KillerKnown ? Random.Range(0.6f, 1.2f) : Random.Range(1f, 2.5f));
         if (distance <= Tuning.Bots.SightRange && distance > 0.01f && (glance || Vector3.Dot(transform.forward, delta / distance) >= 0.25f))
-            _seen = !Physics.Linecast(eye, killer, (int)SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore);
+            _seen = !Physics.Linecast(eye, killer, SightMask, QueryTriggerInteraction.Ignore);
 
         if (_seen || _heard)
         {
@@ -224,22 +231,22 @@ internal partial class Bot
             _killerLook = BotIntel.EyeForward;
         }
 
-        // A fallen bot's head, if it comes into view, is remembered until it is gone.
-        foreach (var pair in Heads)
+        // A fallen survivor's head, if it comes into view, is remembered until it is gone.
+        foreach (var head in FallenHeads())
         {
-            if (pair.Value == null || _headsSeen.Contains(pair.Key))
+            if (_headsSeen.Contains(head))
                 continue;
-            var toHead = pair.Value.transform.position - eye;
+            var toHead = head.transform.position - eye;
             var far = toHead.magnitude;
             if (far > Tuning.Bots.SightRange || far < 0.01f || !(glance || Vector3.Dot(transform.forward, toHead / far) >= 0.25f))
                 continue;
-            if (!Physics.Linecast(eye, eye + toHead / far * Mathf.Max(0f, far - 0.4f), (int)SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore))
+            if (!Physics.Linecast(eye, eye + toHead / far * Mathf.Max(0f, far - 0.4f), SightMask, QueryTriggerInteraction.Ignore))
             {
-                _headsSeen.Add(pair.Key);
-                DebugNote($"sees the head of bot {pair.Key + 1}");
+                _headsSeen.Add(head);
+                DebugNote($"sees the head of {head.playerAvatar.playerName}");
             }
         }
-        _headsSeen.RemoveWhere(slot => !Heads.ContainsKey(slot));
+        _headsSeen.RemoveWhere(head => head == null || !head.triggered);
     }
 
     /// <summary>
@@ -330,7 +337,8 @@ internal partial class Bot
         if (_seen)
         {
             var spotTime = SpotTime(Stance);
-            if (spotTime < 0.4f)
+            // Close up there is no sneaking away, whichever way the killer is looking: it runs. Only a bot already in its hiding place stays, and trusts it.
+            if (spotTime < 0.4f || (distance < RunWithinMetres && !(_mode == Mode.Hide && _settled)))
                 _spottedUntil = now + 3f;
         }
         var spotted = now < _spottedUntil && (_seen || now - _seenAt < 2f || distance < 10f);
@@ -345,7 +353,7 @@ internal partial class Bot
             else
                 _modeUntil = Mathf.Max(_modeUntil, now + 2f);
             // The killer is on its heels: the weight goes. It comes back for it later.
-            if ((_carrying != null || _carriedHead >= 0) && distance < 10f)
+            if ((_carrying != null || _carriedHead != null) && distance < 10f)
                 DropCarried();
             return;
         }
@@ -415,7 +423,7 @@ internal partial class Bot
 
         // Near but out of sight, and coming this way: out of the way before they arrive.
         // Nobody is left behind: what it was fetching or wandering about for can wait.
-        if ((_mode == Mode.Scavenge || _mode == Mode.Wander || _mode == Mode.Idle) && _carrying == null && _carriedHead < 0 && FindHead(out var head))
+        if ((_mode == Mode.Scavenge || _mode == Mode.Wander || _mode == Mode.Idle) && _carrying == null && _carriedHead == null && FindHead(out var head))
         {
             StartFetchHead(head);
             return;
@@ -572,7 +580,10 @@ internal partial class Bot
         {
             _stamina = Mathf.Max(0f, _stamina - Time.deltaTime);
             if (_stamina <= 0f)
+            {
                 _sprinting = false;
+                DebugNote("is out of stamina and can only walk");
+            }
         }
         else
             _stamina = Mathf.Min(StaminaSeconds, _stamina + Time.deltaTime * StaminaRecovery);
@@ -598,8 +609,7 @@ internal partial class Bot
                 _sprinting = boosted || (_stamina > 0f && (_fleeingBang || now - _seenAt < 3f || distance < 12f));
                 if (InTruck && ExtractionState.TrucksOpen && !_fleeingBang)
                 {
-                    SetMode(Mode.Rest, 1000000f);
-                    _agent!.ResetPath();
+                    StartRest();
                     break;
                 }
                 if (now >= _repathAt || (Arrived(1.5f) && now >= _repathAt - 1.5f))
@@ -627,9 +637,9 @@ internal partial class Bot
                     Watch();
                     break;
                 }
-                // Getting there comes first: upright and quick while nobody watches, low when watched.
-                _wanted = _seen ? StanceKind.Crouch : StanceKind.Stand;
-                _sprinting = !_seen && _stamina > 0f && (distance < 15f || boosted);
+                // Getting there comes first: upright and quick, unless it is being watched from afar and low is what keeps it unseen.
+                _wanted = _seen && distance >= RunWithinMetres ? StanceKind.Crouch : StanceKind.Stand;
+                _sprinting = _wanted == StanceKind.Stand && _stamina > 0f && (distance < 15f || boosted);
                 if (Arrived(0.4f))
                 {
                     _agent!.ResetPath();
@@ -687,12 +697,26 @@ internal partial class Bot
                 BringHeadLogic();
                 break;
             case Mode.Rest:
-                _sprinting = false;
                 _wanted = StanceKind.Stand;
-                _agent!.ResetPath(); // safe in the truck
-                Watch();
                 if (!InTruck)
+                {
                     SetMode(Mode.Escape, 180f); // knocked out of it
+                    break;
+                }
+                // On to the back, where the killer's sword does not reach from the door; then it has done its part.
+                if (_restSpot != null && !Arrived(0.4f))
+                {
+                    _sprinting = _stamina > 0f && distance < 12f;
+                    if (now >= _repathAt)
+                    {
+                        _repathAt = now + 1f;
+                        GoTo(_restSpot.Value);
+                    }
+                    break;
+                }
+                _sprinting = false;
+                _agent!.ResetPath();
+                Watch();
                 break;
         }
     }
@@ -764,8 +788,9 @@ internal partial class Bot
                 SetMode(Mode.Idle, 0.2f);
                 break;
             case Mode.FetchHead:
-                _headsSeen.Remove(_targetHead); // cannot get to it; if it comes into view again it gets another try
-                _targetHead = -1;
+                if (_targetHead != null)
+                    _headsSeen.Remove(_targetHead); // cannot get to it; if it comes into view again it gets another try
+                _targetHead = null;
                 SetMode(Mode.Idle, 0.2f);
                 break;
             case Mode.Hide:
@@ -839,7 +864,7 @@ internal partial class Bot
     }
 
     private bool InKillerSight(Vector3 spot)
-        => KillerKnown && !Physics.Linecast(_lastKnown, spot + Vector3.up * 0.5f, (int)SemiFunc.LayerMaskGetVisionObstruct(), QueryTriggerInteraction.Ignore);
+        => KillerKnown && !Physics.Linecast(_lastKnown, spot + Vector3.up * 0.5f, SightMask, QueryTriggerInteraction.Ignore);
 
     /// <summary>Of a dozen places, where to go now: away from every danger along a path that cannot be cut off, out of the killer's sight, no dead end, not where another bot already goes. An open truck beats all.</summary>
     private Vector3 PickRoute(bool run)
@@ -947,7 +972,7 @@ internal partial class Bot
     // Deliver what it holds; else fetch what is worth the walk; else keep moving somewhere safe (valuables keep coming).
     private void ChooseTask()
     {
-        if (_carriedHead >= 0)
+        if (_carriedHead != null)
         {
             SetMode(Mode.BringHead, 90f);
             return;
@@ -1164,11 +1189,59 @@ internal partial class Bot
         if (InTruck)
         {
             DebugNote("reached the truck");
-            SetMode(Mode.Rest, 1000000f);
-            _agent!.ResetPath();
+            StartRest();
             return;
         }
         GoToTruck();
+    }
+
+    private void StartRest()
+    {
+        var spot = FindSpotInTruck();
+        SetMode(Mode.Rest, 1000000f);
+        _agent!.ResetPath();
+        _restSpot = spot;
+        if (spot != null)
+            Hunted.Logger.LogDebug($"{Name} goes to the back of the truck, {Vector3.Distance(transform.position, spot.Value):0.0} m further in.");
+    }
+
+    /// <summary>The walkable spot in the truck it just entered that is the longest walk from here, so the furthest from the door it came in by, and not where another bot is going.</summary>
+    private Vector3? FindSpotInTruck()
+    {
+        var rooms = Avatar.RoomVolumeCheck.CurrentRooms.Where(r => r != null && r.Truck).ToList();
+        var colliders = rooms.SelectMany(r => r.GetComponentsInChildren<Collider>(true)).ToList();
+        if (colliders.Count == 0)
+            return null;
+        var bounds = colliders[0].bounds;
+        foreach (var collider in colliders)
+            bounds.Encapsulate(collider.bounds);
+
+        const float step = 0.75f;
+        var here = transform.position;
+        var spots = new List<Vector3>();
+        for (var x = bounds.min.x; x <= bounds.max.x; x += step)
+            for (var z = bounds.min.z; z <= bounds.max.z; z += step)
+            {
+                var probe = new Vector3(x, here.y, z);
+                if (!NavMesh.SamplePosition(probe, out var hit, 0.5f, NavMesh.AllAreas) || Mathf.Abs(hit.position.y - here.y) > 1.5f)
+                    continue;
+                var inside = hit.position + Vector3.up * 0.5f;
+                if (colliders.Any(c => c is MeshCollider { convex: false } ? c.bounds.Contains(inside) : (c.ClosestPoint(inside) - inside).sqrMagnitude < 0.01f)
+                    && !All.Any(b => b != this && b != null && b._restSpot != null && Vector3.Distance(b._restSpot.Value, hit.position) < 1.2f))
+                    spots.Add(hit.position);
+            }
+
+        Vector3? best = null;
+        var longest = 1f; // a step or two further is no improvement
+        foreach (var spot in spots.OrderByDescending(s => Vector3.Distance(s, here)).Take(8))
+        {
+            if (TryPath(spot, out _, out var length, 0.5f) && length > longest)
+            {
+                longest = length;
+                best = spot;
+            }
+        }
+        return best;
     }
 
     private void GoToTruck()
@@ -1194,60 +1267,71 @@ internal partial class Bot
                 destination = point.transform.position;
             }
         }
-        if (destination == null)
-            destination = Trucks().OrderBy(b => (b.center - transform.position).sqrMagnitude).Select(b => (Vector3?)b.center).FirstOrDefault();
         if (destination != null)
             GoTo(destination.Value);
     }
 
-    // --- A fallen bot's head ----------------------------------------------------------------------------------------------------
+    // --- A fallen survivor's head ----------------------------------------------------------------------------------------------------
+
+    /// <summary>The heads lying about: a bot's or a player's, it makes no difference. The killer has none to rescue.</summary>
+    private static IEnumerable<PlayerDeathHead> FallenHeads()
+    {
+        foreach (var player in SemiFunc.PlayerGetList())
+            if (player != null && !KillerRole.IsKiller(player) && player.playerDeathHead != null && player.playerDeathHead.triggered)
+                yield return player.playerDeathHead;
+    }
+
+    // Where a head brings its owner back: in an extraction point as it completes, or in a truck once they are open. There it can be left.
+    private static bool WhereItBelongs(PlayerDeathHead head)
+        => head.roomVolumeCheck != null && (head.roomVolumeCheck.inExtractionPoint || (ExtractionState.TrucksOpen && head.roomVolumeCheck.inTruck));
 
     /// <summary>A head it has seen and can reach: not one another bot is seeing to, and not one the killer is standing over (unless time is running out).</summary>
-    private bool FindHead(out int slot)
+    private bool FindHead(out PlayerDeathHead head)
     {
-        slot = -1;
+        head = null!;
         var best = float.MaxValue;
         foreach (var candidate in _headsSeen)
         {
-            if (!Heads.TryGetValue(candidate, out var head) || head == null || candidate == _targetHead || All.Any(b => b != this && b != null && (b._targetHead == candidate || b._carriedHead == candidate)))
+            if (candidate == null || !candidate.triggered || All.Any(b => b != this && b != null && (b._targetHead == candidate || b._carriedHead == candidate)))
                 continue;
-            var at = head.transform.position;
-            if (head.GetComponent<PhysGrabObject>() is { } held && (held.grabbed || held.playerGrabbing.Count > 0))
+            var at = candidate.transform.position;
+            if (candidate.physGrabObject != null && (candidate.physGrabObject.grabbed || candidate.physGrabObject.playerGrabbing.Count > 0))
                 continue; // a player has it
             if (KillerKnown && Time.time - _lastNoticed < 8f && Vector3.Distance(at, _lastKnown) < 10f && BotIntel.Urgency < 1f)
                 continue;
-            if (Trucks().Any(t => t.Contains(at))) // already where it is going
+            if (WhereItBelongs(candidate))
                 continue;
             if (!TryPath(at, out _, out var length) || length >= best)
                 continue;
             best = length;
-            slot = candidate;
+            head = candidate;
         }
-        return slot >= 0;
+        return head != null;
     }
 
-    private void StartFetchHead(int slot)
+    private void StartFetchHead(PlayerDeathHead head)
     {
         _target = null;
-        _targetHead = slot;
+        _targetHead = head;
         SetMode(Mode.FetchHead, 60f);
-        DebugNote($"goes for the head of bot {slot + 1}");
+        DebugNote($"goes for the head of {head.playerAvatar.playerName}");
     }
 
     private void FetchHeadLogic()
     {
-        if (!Heads.TryGetValue(_targetHead, out var head) || head == null || Time.time >= _modeUntil || (head.GetComponent<PhysGrabObject>() is { } held && held.grabbed))
+        var head = _targetHead;
+        if (head == null || !head.triggered || Time.time >= _modeUntil || (head.physGrabObject != null && head.physGrabObject.grabbed))
         {
-            _targetHead = -1;
+            _targetHead = null;
             SetMode(Mode.Idle, 0.2f);
             return;
         }
         if (Vector3.Distance(head.transform.position, transform.position + Vector3.up * 0.3f) < 1.6f)
         {
-            _carriedHead = _targetHead;
-            _targetHead = -1;
+            _carriedHead = head;
+            _targetHead = null;
             SetMode(Mode.BringHead, 90f);
-            Hunted.Logger.LogInfo($"{Name} picked up the head of bot {_carriedHead + 1} and takes it to a truck.");
+            Hunted.Logger.LogInfo($"{Name} picked up the head of {head.playerAvatar.playerName}.");
             return;
         }
         if (Time.time >= _repathAt)
@@ -1257,86 +1341,84 @@ internal partial class Bot
         }
     }
 
+    // A head comes back to life where the valuables go, or at a truck once they are open: it goes wherever that is, like a survivor would take it.
     private void BringHeadLogic()
     {
-        if (_carriedHead < 0 || Time.time >= _modeUntil)
+        var head = _carriedHead;
+        if (head == null || Time.time >= _modeUntil)
         {
+            DropHead();
+            _point = null;
             SetMode(Mode.Idle, 0.2f);
             return;
         }
-        GoToTruck();
+        if (ExtractionState.TrucksOpen)
+        {
+            _point = null;
+            if (InTruck)
+            {
+                Hunted.Logger.LogInfo($"{Name} brought the head of {head.playerAvatar.playerName} to a truck.");
+                DropHead();
+                SetMode(Mode.Idle, 0.2f);
+                return;
+            }
+            GoToTruck();
+            return;
+        }
+        if (_point == null || _point.currentState != ExtractionPoint.State.Active)
+        {
+            if (!FindPoint(out var point, out _))
+            {
+                DebugNote($"has nowhere to take the head of {head.playerAvatar.playerName}");
+                GoToTruck();
+                return;
+            }
+            _point = point;
+            _pointWalk = WalkSpotOf(point, out var walkTo, out _, out _) ? walkTo : point.transform.position;
+            _repathAt = 0f;
+        }
+        var flat = _pointWalk - transform.position;
+        flat.y = 0f;
+        if (ExtractionPatches.InZone(_point, transform.position + Vector3.up * 0.5f) || (flat.magnitude < 3f && Arrived(0.6f)))
+        {
+            Hunted.Logger.LogInfo($"{Name} brought the head of {head.playerAvatar.playerName} to an extraction point.");
+            var jitter = Random.insideUnitCircle * 0.7f;
+            DropHead(ExtractionPatches.DropSpotOf(_point) + new Vector3(jitter.x, 0f, jitter.y));
+            _point = null;
+            SetMode(Mode.Idle, 0.2f);
+            return;
+        }
+        if (Time.time >= _repathAt)
+        {
+            _repathAt = Time.time + 1f;
+            GoTo(_pointWalk);
+        }
     }
 
     private void CarryHead()
     {
-        if (_carriedHead < 0)
+        var head = _carriedHead;
+        if (head == null)
             return;
-        if (!Heads.TryGetValue(_carriedHead, out var head) || head == null)
+        var grab = head.physGrabObject;
+        if (!head.triggered || grab == null)
         {
-            _carriedHead = -1;
+            _carriedHead = null; // its owner is back
             return;
         }
-        var grab = head.GetComponent<PhysGrabObject>();
-        if (grab == null || grab.grabbed)
+        if (grab.grabbed)
         {
             DropHead(); // a player took it from it
             return;
         }
         BotCarry.HoldAt(grab, transform.position + transform.forward * 0.6f + Vector3.up * (Stance == StanceKind.Stand ? 1.0f : 0.5f));
-        if (InTruck)
-            DropHead();
     }
 
-    private void DropHead()
+    private void DropHead(Vector3? at = null)
     {
-        var slot = _carriedHead;
-        _carriedHead = -1;
-        if (slot >= 0 && Heads.TryGetValue(slot, out var head) && head != null && head.GetComponent<PhysGrabObject>() is { } grab)
-            BotCarry.LetGo(grab, null);
-    }
-
-    /// <summary>As with a player: a head that lies in a truck for two seconds, or in an extraction point as it completes, brings its owner back there, at half health and with the boost that goes with a revive.</summary>
-    private static void ReviveCheck()
-    {
-        foreach (var slot in Heads.Keys.ToList())
-        {
-            var head = Heads[slot];
-            if (head == null)
-            {
-                HeadInTruckSince.Remove(slot);
-                continue;
-            }
-            var extracted = ExtractionPoints.Get().Any(p => p != null && (p.currentState == ExtractionPoint.State.Extracting || p.currentState == ExtractionPoint.State.Complete) && ExtractionPatches.InZone(p, head.transform.position));
-            if (!extracted)
-            {
-                if (!Trucks().Any(t => t.Contains(head.transform.position)))
-                {
-                    HeadInTruckSince.Remove(slot);
-                    continue;
-                }
-                if (!HeadInTruckSince.TryGetValue(slot, out var since))
-                {
-                    HeadInTruckSince[slot] = Time.time;
-                    continue;
-                }
-                if (Time.time - since < 2f)
-                    continue;
-            }
-            var at = head.transform.position;
-            ClearHead(slot);
-            HeadInTruckSince.Remove(slot);
-            DeadSlots.Remove(slot);
-            var bot = Spawn(slot, Mathf.Max(slot + 1, BotRoster.Count), at);
-            if (bot == null)
-            {
-                DeadSlots.Add(slot);
-                continue;
-            }
-            bot.Health = HuntedConfig.MaxHealth.Value * 0.5f;
-            bot._wasHealthy = false;
-            if (HuntedConfig.BoostSeconds.Value > 0f)
-                bot._boostUntil = Time.time + HuntedConfig.BoostSeconds.Value;
-            Hunted.Logger.LogInfo($"{bot.Name} was revived {(extracted ? "by an extraction point" : "at a truck")}.");
-        }
+        var head = _carriedHead;
+        _carriedHead = null;
+        if (head != null && head.physGrabObject != null)
+            BotCarry.LetGo(head.physGrabObject, at);
     }
 }

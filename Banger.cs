@@ -457,7 +457,7 @@ internal static class Banger
         }
     }
 
-    /// <summary>Somebody a head can go for: a survivor, or a bot.</summary>
+    /// <summary>Somebody a head can go for: a survivor.</summary>
     private readonly struct Quarry
     {
         internal readonly Vector3 Position;
@@ -486,17 +486,6 @@ internal static class Banger
             best = distance;
             found = true;
             quarry = new Quarry(player.transform.position, player.PlayerVisionTarget.VisionTransform.position + (player.isCrawling ? Vector3.zero : Vector3.up * 0.25f), player.isCrawling);
-        }
-        foreach (var bot in Bot.All)
-        {
-            if (bot == null || !bot.Alive)
-                continue;
-            var distance = (bot.transform.position - from).sqrMagnitude;
-            if (distance >= best)
-                continue;
-            best = distance;
-            found = true;
-            quarry = new Quarry(bot.transform.position, bot.TargetPosition, false);
         }
         return found;
     }

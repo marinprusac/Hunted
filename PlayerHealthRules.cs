@@ -30,7 +30,7 @@ internal static class PlayerHealthRules
             RoomSync.Set(RoomKey, string.Join("|", HuntedConfig.MaxHealth.Value, HuntedConfig.HealthRegenPerSecond.Value.ToString(CultureInfo.InvariantCulture)));
     }
 
-    private static (int max, float regen) Values()
+    internal static (int max, float regen) Values()
     {
         var text = RoomSync.Get<string>(RoomKey);
         if (text != null)

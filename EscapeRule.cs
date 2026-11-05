@@ -94,18 +94,15 @@ internal static class EscapeRule
         }
 
         var survivors = SemiFunc.PlayerGetList().Where(p => p != null && !KillerRole.IsKiller(p)).ToList();
-        var bots = BotRoster.Count;
-        if (survivors.Count == 0 && bots == 0)
+        if (survivors.Count == 0)
             return;
         var alive = survivors.Where(p => !p.isDisabled && !p.deadSet).ToList();
-        var botsAlive = BotRoster.Alive;
 
-        // The bots are survivors too: all of them dead for the killer to win, and all that live inside a truck for the survivors to.
-        if (alive.Count == 0 && botsAlive == 0)
+        if (alive.Count == 0)
         {
             Hold(dt, Tuning.Round.KillerWinHoldSeconds, survivorsWin: false, "ALL SURVIVORS ARE DEAD - THE KILLER WINS");
         }
-        else if (ExtractionState.TrucksOpen && alive.All(p => p.RoomVolumeCheck.inTruck) && BotRoster.InTruck >= botsAlive)
+        else if (ExtractionState.TrucksOpen && alive.All(p => p.RoomVolumeCheck.inTruck))
         {
             Hold(dt, Tuning.Round.SurvivorEscapeHoldSeconds, survivorsWin: true, "THE SURVIVORS ESCAPED");
         }

@@ -34,7 +34,7 @@ internal static class KillerVision
         internal bool RenderersLogged;
     }
 
-    /// <summary>What the killer's eyes need to know about someone they might spot: a survivor, or a bot.</summary>
+    /// <summary>What the killer's eyes need to know about someone they might spot: a survivor.</summary>
     private readonly struct Subject
     {
         internal Subject(Component key, string name, Vector3 target, bool disabled, bool crouching, bool crawling, bool tumbling, bool exposed)
@@ -125,12 +125,6 @@ internal static class KillerVision
             Evaluate(camera, new Subject(player, player.playerName, player.PlayerVisionTarget.VisionTransform.position, player.isDisabled,
                 player.isCrouching, player.isCrawling, player.isTumbling, KillerRoomRules.CannotHide(player)), step);
         }
-        foreach (var bot in Bot.All.ToArray())
-        {
-            if (bot != null && bot.Alive)
-                Evaluate(camera, new Subject(bot, bot.Name, bot.TargetPosition, false, bot.Crouching, bot.Crawling, bot.Tumbling,
-                    KillerRoomRules.CannotHideAt(bot.transform.position)), step);
-        }
         ApplyVisibility();
     }
 
@@ -204,6 +198,15 @@ internal static class KillerVision
                         renderers.AddRange(avatar.playerAvatarVisuals.GetComponentsInChildren<Renderer>(true));
                     if (avatar.tumble != null)
                         renderers.AddRange(avatar.tumble.GetComponentsInChildren<Renderer>(true));
+                }
+                // The death head sits under that same root, but it is an object in the world: the killer always sees it, like a valuable.
+                var head = player is PlayerAvatar owner && owner.playerDeathHead != null ? owner.playerDeathHead.transform : null;
+                if (head != null)
+                {
+                    foreach (var renderer in renderers)
+                        if (renderer != null && renderer.transform.IsChildOf(head))
+                            renderer.forceRenderingOff = false;
+                    renderers.RemoveAll(r => r != null && r.transform.IsChildOf(head));
                 }
                 spot.Renderers = renderers.Where(r => r != null && !(r is ParticleSystemRenderer)).Distinct().ToArray();
                 if (!spot.RenderersLogged && player is PlayerAvatar logged && spot.Renderers.Length > 0)

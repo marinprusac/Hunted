@@ -46,7 +46,7 @@ internal static class SurvivorBoost
             RoomSync.Set(RoomKey, HuntedConfig.BoostSeconds.Value.ToString(CultureInfo.InvariantCulture));
     }
 
-    private static float Seconds()
+    internal static float Seconds()
     {
         var text = RoomSync.Get<string>(RoomKey);
         if (text != null && float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds))
@@ -72,6 +72,8 @@ internal static class SurvivorBoost
     {
         if (avatar == null || !KillerRole.ModeActive)
             return false;
+        if (BotAvatar.Is(avatar))
+            return BotAvatar.IsBoosted(avatar); // its owner is the host, whose own boost is not the bot's
         if (avatar.isLocal)
             return _until > Time.time;
         var owner = avatar.photonView != null ? avatar.photonView.Owner : null;

@@ -91,6 +91,7 @@ internal static class KillerRole
         KillerAura.Reset();
         KillerBody.Reset();
         Bot.Reset();
+        BotAvatar.Reset();
     }
 
     internal static void Sync()
@@ -125,7 +126,7 @@ internal static class KillerRole
     /// <summary>Host only. Picks (and publishes) a killer if there is none or the current one left.</summary>
     internal static void HostEnsurePicked()
     {
-        var players = SemiFunc.PlayerGetList();
+        var players = BotAvatar.WithoutBots(SemiFunc.PlayerGetList()).ToList(); // a bot is never the killer
         if (KillerSteamId != null && players.Any(p => p.steamID == KillerSteamId))
             return;
 

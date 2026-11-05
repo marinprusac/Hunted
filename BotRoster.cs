@@ -1,4 +1,3 @@
-using System.Linq;
 using HarmonyLib;
 using Photon.Pun;
 using UnityEngine;
@@ -6,9 +5,8 @@ using UnityEngine;
 namespace Hunted;
 
 /// <summary>
-/// How many bots a level has and how they are doing, as far as the rules are concerned. The host's Bots slider is read when the level is set up and kept for that
-/// level (moving the slider during a level changes the next one), and it counts as that many more survivors for the number of extraction points and for the
-/// win conditions. The host runs the bots, and the rules are the host's too, so how they are doing is simply read.
+/// How many bots a level has. The host's Bots slider is read when the level is set up and kept for that level (moving the slider during a level changes the next one),
+/// and it counts as that many more survivors for the number of extraction points. Everything else counts them through the player list, where they are avatars like anyone.
 /// </summary>
 internal static class BotRoster
 {
@@ -38,20 +36,6 @@ internal static class BotRoster
     {
         _hostCount = DebugToggles.BotCount;
         RoomSync.Set(CountKey, _hostCount);
-    }
-
-    /// <summary>Host: bots that are not dead.</summary>
-    internal static int Alive => Read().alive;
-
-    /// <summary>Bots inside a truck.</summary>
-    internal static int InTruck => Read().inTruck;
-
-    private static (int alive, int inTruck) Read()
-    {
-        var total = Count;
-        if (total <= 0)
-            return (0, 0);
-        return (total - Bot.DeadCount, Bot.All.Count(b => b != null && b.Alive && b.InTruck));
     }
 }
 

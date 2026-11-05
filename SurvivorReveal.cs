@@ -15,7 +15,7 @@ internal static class SurvivorReveal
     /// <summary>The colour of every reveal: the shape and the dot.</summary>
     internal static readonly Color Color = new(1f, 1f, 0f);
 
-    /// <summary>A survivor a source can reveal: a player, or a bot.</summary>
+    /// <summary>A survivor a source can reveal: a player.</summary>
     internal readonly struct Subject
     {
         internal readonly Component Key;
@@ -88,9 +88,6 @@ internal static class SurvivorReveal
                 continue;
             Update(new Subject(player, player.transform.position, player.playerAvatarVisuals.transform, player), seen);
         }
-        foreach (var bot in Bot.All.ToArray())
-            if (bot != null && bot.Alive)
-                Update(new Subject(bot, bot.transform.position, bot.transform, null), seen);
 
         // Survivors that are gone (dead, left, or out of the level) are not revealed any more.
         foreach (var key in Revealed.Where(k => k == null || !seen.Contains(k)).ToList())

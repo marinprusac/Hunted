@@ -80,16 +80,6 @@ internal static class KillerWeapon
     private static float _ignoreTimer;
     private static float _solidTimer;
 
-    /// <summary>A new body (a bot's, when it comes back) is made to be passed through by the sword straight away, not at the next sweep.</summary>
-    internal static void IgnoreBody(Collider body)
-    {
-        if (Weapon == null || body == null)
-            return;
-        foreach (var a in Weapon.GetComponentsInChildren<Collider>(true))
-            if (a != null && a != body)
-                Physics.IgnoreCollision(a, body, true);
-    }
-
     /// <summary>
     /// The weapon's solid body never collides with any player's body: not the killer's (with the larger body the weapon comes out
     /// of the inventory inside it and would knock the killer about) and not the survivors'. A survivor that stopped the sword at
@@ -115,14 +105,6 @@ internal static class KillerWeapon
                     if (a != null && b != null && a != b)
                         Physics.IgnoreCollision(a, b, true);
         }
-
-        // The bots are bodies like the others.
-        foreach (var bot in Bot.All)
-            if (bot != null)
-                foreach (var b in bot.GetComponentsInChildren<Collider>(true))
-                    foreach (var a in weapon)
-                        if (a != null && b != null && a != b)
-                            Physics.IgnoreCollision(a, b, true);
 
         // The same for valuables and carts: the sword goes through them, so a swing can neither knock them about nor break them.
         // (The hit box is already set to leave physics objects alone.) Valuables appear over time, so only new colliders are handled, once a second.

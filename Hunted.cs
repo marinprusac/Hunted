@@ -31,7 +31,7 @@ public class Hunted : BaseUnityPlugin
         MenuLib.MenuAPI.AddElementToLobbyMenu(KillerCheckboxes.BuildHeader);
         ConfigSync.Init(Config);
         Banger.Init();
-        Bot.Init();
+        BotAvatar.Init();
         Patch();
 
         Logger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version} has loaded!");
@@ -71,6 +71,7 @@ public class Hunted : BaseUnityPlugin
         KillerAura.Tick();
         SurvivorSprint.Tick();
         Bot.Tick();
+        BotAvatar.Tick(Time.deltaTime);
         KillerBody.Tick();
         KillerLook.Tick(Time.deltaTime);
         SurvivorReveal.Tick(Time.deltaTime);
