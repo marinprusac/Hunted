@@ -4,6 +4,8 @@
 
 An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **the killer**: invulnerable, fast, huge and armed with a sword. Everyone else is a **survivor** who has to fill the extraction points with valuables and escape in a truck.
 
+![The killer in a hallway](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-hallway.jpg)
+
 **Everyone in the lobby needs Hunted and MenuLib, on the same version.** Install it from [Thunderstore](https://thunderstore.io/c/repo/p/Prussian/Hunted/) with a mod manager such as Gale.
 
 ## How a round works
@@ -46,6 +48,20 @@ A slider in the lobby adds up to 5 bot survivors, with any number of players. Th
 Singleplayer, Public Game and Tutorial are hidden while the mod is installed. Use **Host Hunted** or **Join Hunted** in the main menu, and disable the mod to play the normal game.
 
 If you play alone, nobody is the killer unless you tick your own box, and a killer on their own needs at least one bot.
+
+## Screenshots
+
+![The killer in a bedroom doorway](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-bedroom.jpg)
+
+![A bomber head running from the killer](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/bomber-head-closeup.jpg)
+
+![The killer with a bomber head](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-bomber-head.jpg)
+
+![The killer and a bomber head in a bedroom](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-bedroom-bomber-head.jpg)
+
+![The killer's eyes in a dark doorway](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-doorway.jpg)
+
+![The killer at the end of a dark corridor](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-corridor.jpg)
 
 ## Settings
 
