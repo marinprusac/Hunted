@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Hunted;
 
 /// <summary>
-/// A deep red light all around the killer, like the red stain in Dead by Daylight, so survivors see the killer coming. The killer does not see it themselves: it is built on every client, and switched off only on the killer's own. It hangs on
+/// A deep light in the killer's colour (red for Skelespawn, purple for Everseer) all around the killer, like the red stain in Dead by Daylight, so survivors see the killer coming. The killer does not see it themselves: it is built on every client, and switched off only on the killer's own. It hangs on
 /// the killer's view camera (every client keeps that in step with the player), so it is built on every client. The killer's body
 /// does not cast shadows (see KillerBody), or it would block the light from the inside.
 /// </summary>
@@ -49,15 +49,14 @@ internal static class KillerAura
 
         Reset();
         _owner = killer;
-        _object = new GameObject("Hunted Red Light");
+        _object = new GameObject("Hunted Killer Light");
         _object.transform.SetParent(killer.localCamera.transform, false);
         _object.transform.localPosition = Vector3.zero;
         _object.transform.localRotation = Quaternion.identity;
         var light = _object.AddComponent<Light>();
         light.type = LightType.Point;
-        light.color = new Color(1f, 0f, 0f);
         Apply(light);
-        Hunted.Logger.LogDebug($"Red light built on the camera of {killer.playerName} (this game is {(killer.isLocal ? "the killer" : "a survivor")}): enabled={light.enabled}, range={light.range}, intensity={light.intensity}, shadows={light.shadows}.");
+        Hunted.Logger.LogDebug($"Killer light built on the camera of {killer.playerName} (this game is {(killer.isLocal ? "the killer" : "a survivor")}): enabled={light.enabled}, range={light.range}, intensity={light.intensity}, shadows={light.shadows}.");
     }
 
     private static void Apply(Light light)
@@ -70,6 +69,7 @@ internal static class KillerAura
         var shadows = visible ? LightShadows.Hard : LightShadows.None;
         if (light.shadows != shadows)
             light.shadows = shadows;
+        light.color = KillerKinds.Colour;
         light.range = Tuning.Killer.RedLightRange;
         light.intensity = Tuning.Killer.RedLightIntensity;
     }

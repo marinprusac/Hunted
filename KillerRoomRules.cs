@@ -83,18 +83,14 @@ static class EnemyVisionHidePatch
     public static bool Hook(PlayerAvatar player, bool original) => original && !KillerRoomRules.CannotHide(player);
 }
 
-/// <summary>While the local player is in the killer room the ambient light fades to red. The fog keeps the game's colour; the red comes from the room's own lights.</summary>
+/// <summary>While the local player is in the killer room the ambient light fades to the killer's colour. The fog keeps the game's colour; the tint comes from the room's own lights.</summary>
 [HarmonyPatch(typeof(EnvironmentDirector))]
 static class KillerRoomAmbience
 {
     private static float _lerp;
     private static float _lastTime;
 
-    private static Color Red(Color color, float minimum)
-    {
-        var strength = Mathf.Max(color.r, color.g, color.b);
-        return new Color(Mathf.Max(strength * 1.5f, minimum), 0f, 0f, color.a);
-    }
+    private static Color Red(Color color, float minimum) => KillerKinds.Tinted(color, 1.5f, minimum);
 
     // The game recomputes the colour every frame, so the red is laid over it every frame, and fades in and out as the player
     // crosses the room's border.

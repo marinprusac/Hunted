@@ -19,8 +19,35 @@ internal static class KillerBody
     private static readonly FieldInfo[] SoundFields = typeof(PlayerAvatar).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
         .Where(f => f.FieldType == typeof(Sound)).ToArray();
 
-    /// <summary>The killer's own sound effects (jump, land, crouch, tumble...), by identity.</summary>
-    internal static bool IsKillerSound(Sound sound) => Sounds.Contains(sound);
+    // The killer's items and abilities (the sword, the staff, the laser): their sounds are the killer's too.
+    private static readonly HashSet<Sound> ItemSounds = new();
+    private static readonly HashSet<int> ItemsDone = new();
+
+    /// <summary>The killer's own sound effects (jump, land, crouch, tumble...) and those of their items and abilities, by identity.</summary>
+    internal static bool IsKillerSound(Sound sound) => Sounds.Contains(sound) || ItemSounds.Contains(sound);
+
+    /// <summary>Makes every sound of an item of the killer's (all the sounds its scripts have) as deep and loud as the killer's own. Once per item.</summary>
+    internal static void AddItemSounds(Component? item)
+    {
+        if (item == null || !ItemsDone.Add(item.gameObject.GetInstanceID()))
+            return;
+        foreach (var behaviour in item.GetComponentsInChildren<MonoBehaviour>(true))
+        {
+            if (behaviour == null)
+                continue;
+            for (var type = behaviour.GetType(); type != null && type != typeof(MonoBehaviour); type = type.BaseType)
+                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                    if (field.FieldType == typeof(Sound) && field.GetValue(behaviour) is Sound sound)
+                        ItemSounds.Add(sound);
+        }
+    }
+
+    /// <summary>Makes one sound the killer plays (one of the game's, borrowed) as deep and loud as the killer's own.</summary>
+    internal static void AddSound(Sound? sound)
+    {
+        if (sound != null)
+            ItemSounds.Add(sound);
+    }
 
     // While a footstep, jump, landing, voice or weapon impact of the killer runs, monsters are not told about it.
     internal static int Muted;
@@ -35,6 +62,8 @@ internal static class KillerBody
         _scaled = null;
         _soundOwner = null;
         Sounds.Clear();
+        ItemSounds.Clear();
+        ItemsDone.Clear();
         Muted = Heavy = 0;
     }
 
@@ -255,6 +284,20 @@ static class KillerSoundPatch
             return;
         __instance.Volume = __state.volume;
         __instance.Pitch = __state.pitch;
+    }
+}
+
+/// <summary>The same for the killer's looping sounds (the laser's hum, the staff's charge), which the game plays another way.</summary>
+[HarmonyPatch(typeof(Sound), nameof(Sound.PlayLoop))]
+static class KillerLoopSoundPatch
+{
+    [HarmonyPrefix]
+    private static void PlayLoop_Prefix(Sound __instance, ref float pitchMultiplier, ref float volumeMultiplier)
+    {
+        if (!KillerRole.ModeActive || !KillerBody.IsKillerSound(__instance))
+            return;
+        pitchMultiplier *= Tuning.Killer.SoundPitchMultiplier;
+        volumeMultiplier *= Tuning.Killer.SoundVolumeMultiplier;
     }
 }
 

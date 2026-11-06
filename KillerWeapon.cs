@@ -60,10 +60,11 @@ internal static class KillerWeapon
         if (!KillerRole.ModeActive)
             return;
 
-        if (KillerRole.KillerSteamId == null)
-            return;
+        if (KillerRole.KillerSteamId == null || KillerKinds.Current != KillerKind.Skelespawn)
+            return; // the sword is Skelespawn's
 
         ResolveWeapon();
+        KillerBody.AddItemSounds(Weapon); // the sword sounds as deep and loud as the killer
         // The host decides what counts as a swing (it reads this from the sword): a lower value needs less speed.
         if (Weapon != null)
             Weapon.swingDetectSpeedMultiplier = Tuning.Sword.SwingDetectMultiplier;
@@ -398,6 +399,7 @@ static class KillerWeaponPatches
         __instance.hurtCollider.playerTumbleTime = _baseTumble.Value.time * tumble;
         __instance.hurtCollider.playerTumbleForce = _baseTumble.Value.force * tumble;
         __instance.hurtCollider.playerTumbleTorque = _baseTumble.Value.torque * tumble;
+        __instance.hurtCollider.playerHitForce = Tuning.Sword.PushForce; // a push away from the sword (the game's does not push)
         __instance.hurtCollider.enemyLogic = false;
         __instance.hurtCollider.physLogic = false;
     }

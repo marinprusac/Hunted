@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Hunted;
 
 /// <summary>
-/// The cue the killer hears when a survivor walks into the killer room: two deep, bell-like notes, one after the other. It comes from where the survivor
+/// The cue the killer hears when a survivor walks into the killer room: one deep, bell-like note, which the hum then carries on from. It comes from where the survivor
 /// is, so the killer hears which way to go and how far. It is made here out of sine waves (nothing to download or license) and played through the game's own
 /// sound system, so the game's volume setting applies.
 /// </summary>
@@ -33,10 +33,11 @@ internal static class RoomAlert
     private static AudioClip? _humClip;
 
     /// <summary>
-    /// A quiet, steady hum that follows a revealed survivor for as long as they are revealed (the caller destroys it). It is a soft pulsing chord, softer than the
-    /// chime but with a wide falloff, so it can be heard from far away and shows which way to go.
+    /// A quiet, steady hum that follows a revealed survivor for as long as they are revealed. It is a soft pulsing chord, softer than the
+    /// chime but with a wide falloff, so it can be heard from far away and shows which way to go. It swells in as the bell dies away (after the bell, if
+    /// <paramref name="afterBell"/>), and <see cref="StopHum"/> fades it out.
     /// </summary>
-    internal static AudioSource? StartHum(Transform target)
+    internal static AudioSource? StartHum(Transform target, bool afterBell)
     {
         var manager = AudioManager.instance;
         if (manager == null || manager.AudioDefault == null || target == null)
@@ -51,15 +52,28 @@ internal static class RoomAlert
         }
         source.clip = _humClip ??= BuildHum();
         source.loop = true;
-        source.volume = Tuning.KillerRoom.RevealHumVolume;
+        source.volume = 0f;
         source.pitch = 1f;
         source.spatialBlend = 1f;
         source.dopplerLevel = 0f;
         source.minDistance *= 8f; // the same wide falloff as the chime
         source.maxDistance *= 8f;
         go.AddComponent<SoundFollowTransform>().Target = target;
+        go.AddComponent<HumFade>().FadeIn(afterBell ? 0.35f : 0f);
         source.Play();
         return source;
+    }
+
+    /// <summary>The hum dies away over a second and a half, then is removed.</summary>
+    internal static void StopHum(AudioSource? hum)
+    {
+        if (hum == null)
+            return;
+        var fade = hum.GetComponent<HumFade>();
+        if (fade != null)
+            fade.FadeOut();
+        else
+            Object.Destroy(hum.gameObject);
     }
 
     // Two seconds that start and end at the same point (every frequency is a whole number of cycles in them), so it loops without a click.
@@ -86,12 +100,12 @@ internal static class RoomAlert
     private static AudioClip Build()
     {
         const int rate = 44100;
-        const float length = 1.9f;
+        const float length = 1.5f;
         var samples = new float[(int)(rate * length)];
         // Each note is a handful of partials that fade away together; the inharmonic ones give it the sound of a struck bell.
         var partials = new[] { (1f, 1f), (2.01f, 0.7f), (2.76f, 0.5f), (4.07f, 0.35f), (5.4f, 0.2f) };
         // Not too deep: very low notes are hard to hear on most speakers and headphones, however loud they are made.
-        var notes = new[] { (start: 0f, frequency: 220f), (start: 0.45f, frequency: 165f) };
+        var notes = new[] { (start: 0f, frequency: 165f) }; // the lower of the two notes it used to have; the hum (the same pitch) carries on from it
         foreach (var note in notes)
         {
             for (var i = (int)(note.start * rate); i < samples.Length; i++)
@@ -115,5 +129,40 @@ internal static class RoomAlert
         var clip = AudioClip.Create("Hunted room alert", samples.Length, 1, rate, false);
         clip.SetData(samples, 0);
         return clip;
+    }
+}
+
+/// <summary>The hum's volume: it swells in after a short wait, and dies away when told to, then removes itself.</summary>
+internal class HumFade : MonoBehaviour
+{
+    private const float InSeconds = 1f;
+    private const float OutSeconds = 1.5f;
+    private AudioSource? _source;
+    private float _wait;
+    private bool _out;
+
+    internal void FadeIn(float wait) => _wait = wait;
+
+    internal void FadeOut() => _out = true;
+
+    private void Update()
+    {
+        _source ??= GetComponent<AudioSource>();
+        if (_source == null)
+            return;
+        var full = Tuning.KillerRoom.RevealHumVolume;
+        if (_out)
+        {
+            _source.volume = Mathf.MoveTowards(_source.volume, 0f, full * Time.deltaTime / OutSeconds);
+            if (_source.volume <= 0f)
+                Destroy(gameObject);
+            return;
+        }
+        if (_wait > 0f)
+        {
+            _wait -= Time.deltaTime;
+            return;
+        }
+        _source.volume = Mathf.MoveTowards(_source.volume, full, full * Time.deltaTime / InSeconds);
     }
 }

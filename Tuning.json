@@ -16,7 +16,8 @@
     "MonsterCallIntervalSeconds": 1,
     "DotScale": 0.3,
     "XrayAlpha": 0.4,
-    "RevealHumVolume": 0.2
+    "RevealHumVolume": 0.2,
+    "RevealLingerSeconds": 3
   },
   "Round": {
     "StartDelaySeconds": 15,
@@ -33,6 +34,7 @@
   },
   "Sword": {
     "TumbleMultiplier": 0.5,
+    "PushForce": 8,
     "SwingDetectMultiplier": 0.5,
     "HeldSpeedMultiplier": 0.75,
     "Scale": 1.7
@@ -55,8 +57,8 @@
     "EyeLightRange": 4,
     "EyeLightIntensity": 1.5,
     "SoundVolumeMultiplier": 2,
-    "SoundRangeMultiplier": 1.5,
-    "SoundPitchMultiplier": 0.75,
+    "SoundRangeMultiplier": 2,
+    "SoundPitchMultiplier": 0.5,
     "RedLightRange": 30,
     "RedLightIntensity": 1.2,
     "KillerRoomEmpowerment": 1.5
@@ -87,6 +89,34 @@
     "HearRange": 16,
     "MemorySeconds": 20
   },
+  "Everseer": {
+    "MaskSpeedMultiplier": 0.75,
+    "LaserShots": 8,
+    "LaserBootSeconds": 1,
+    "LaserShotSeconds": 2,
+    "LaserDamage": 40,
+    "LaserKnockback": 30,
+    "LaserTumbleForce": 25,
+    "LaserTumbleSeconds": 0.5,
+    "LaserThickness": 1,
+    "LaserLight": 2,
+    "LaserCoreWidth": 0,
+    "LaserHitCooldown": 0.3,
+    "LaserRange": 30,
+    "LaserOwnThickness": 1,
+    "LaserOwnAlpha": 0.6,
+    "WandMaxUses": 3,
+    "WandSecondsPerUse": 30,
+    "WandRoomRechargeMultiplier": 2,
+    "WandVolume": 0.35,
+    "WandFlash": 0.3,
+    "EyeSightRange": 20,
+    "EyeTouchRadius": 0.3,
+    "EyeHoldSeconds": 5,
+    "BotEyeNoticeRange": 12,
+    "BotEyeNoticeSeconds": 3,
+    "EyeScale": 0.5
+  },
   "Banger": {
     "MaxUses": 3,
     "SecondsPerUse": 30,
@@ -113,6 +143,7 @@
     "MusicVolume": 1,
     "FadeInSeconds": 0.3,
     "FadeOutSeconds": 3,
-    "ResumeWithinSeconds": 20
+    "ResumeWithinSeconds": 20,
+    "StingVolume": 1
   }
 }

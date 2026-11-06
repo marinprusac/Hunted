@@ -14,19 +14,13 @@ internal static class BotRoster
 
     private static int _hostCount = -1;
 
-    /// <summary>True when this lobby will have a killer: more than one player, or the host ticked someone. Without a killer there are no bots.</summary>
-    internal static bool KillerExpected
-        => KillerRole.KillerSteamId != null || PhotonNetwork.PlayerList.Length >= 2 || KillerChoice.Actor != 0;
-
     /// <summary>Bots in this level.</summary>
     internal static int Count
     {
         get
         {
-            if (!KillerExpected)
-                return 0;
             if (SemiFunc.IsMasterClientOrSingleplayer())
-                return _hostCount >= 0 ? _hostCount : DebugToggles.BotCount;
+                return _hostCount >= 0 ? _hostCount : LobbyOptions.BotCount;
             return RoomSync.Get<int>(CountKey);
         }
     }
@@ -34,7 +28,7 @@ internal static class BotRoster
     /// <summary>Host: takes the slider's value for the level that is about to start. Called while not in a level, so the value is fixed from the moment the level is set up.</summary>
     internal static void HostNewLevel()
     {
-        _hostCount = DebugToggles.BotCount;
+        _hostCount = LobbyOptions.BotCount;
         RoomSync.Set(CountKey, _hostCount);
     }
 }
@@ -49,12 +43,12 @@ static class StartNeedsSurvivorsPatch
         if (!SemiFunc.IsMasterClientOrSingleplayer() || !PhotonNetwork.InRoom)
             return true;
         var alone = PhotonNetwork.PlayerList.Length <= 1;
-        if (!alone || KillerChoice.Actor == 0 || DebugToggles.BotCount > 0)
+        if (!alone || LobbyOptions.BotCount > 0)
             return true;
 
         MenuManager.instance.MenuEffectClick(MenuManager.MenuClickEffectType.Deny);
         MenuManager.instance.PagePopUp("Nobody to hunt", Color.red,
-            "You are the killer and the only player: there would be no survivors.\n\nAdd at least one <b>bot</b> with the Bots slider under the player list, or untick yourself as the killer.", "OK", richText: true);
+            "You are the killer and the only player: there would be no survivors.\n\nAdd at least one <b>bot</b> with the Bots slider under the player list.", "OK", richText: true);
         return false;
     }
 }

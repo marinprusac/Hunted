@@ -11,7 +11,7 @@ namespace Hunted;
 internal static class KillerXray
 {
     private const string GhostName = "Hunted Xray";
-    private static Material? _material;
+    private static readonly Dictionary<Color, Material> Materials = new();
     private static bool _failed;
     private static readonly Dictionary<Component, (int sources, List<GameObject> ghosts)> Ghosts = new();
 
@@ -39,8 +39,8 @@ internal static class KillerXray
         => renderer.gameObject.activeInHierarchy && renderer.gameObject.name != GhostName
            && (renderer is SkinnedMeshRenderer { sharedMesh: not null } || (renderer is MeshRenderer && renderer.GetComponent<MeshFilter>()?.sharedMesh != null));
 
-    /// <summary>Shows (and keeps up to date) the shape of a revealed survivor.</summary>
-    internal static void Show(Component key, Transform root)
+    /// <summary>Shows (and keeps up to date) the shape of a revealed survivor, or of anything else the killer sees through walls, in yellow or <paramref name="colour"/>.</summary>
+    internal static void Show(Component key, Transform root, Color? colour = null)
     {
         if (_failed)
             return;
@@ -53,7 +53,7 @@ internal static class KillerXray
                 if (ghost != null)
                     Object.Destroy(ghost); // their cosmetics changed: copy them again
         }
-        var material = Material();
+        var material = Material(colour ?? SurvivorReveal.Color);
         if (material == null)
             return;
         var list = new List<GameObject>();
@@ -103,10 +103,10 @@ internal static class KillerXray
         renderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
     }
 
-    private static Material? Material()
+    private static Material? Material(Color colour)
     {
-        if (_material != null)
-            return _material;
+        if (Materials.TryGetValue(colour, out var known) && known != null)
+            return known;
         var shader = Shader.Find("Hidden/Internal-Colored");
         if (shader == null)
         {
@@ -114,8 +114,8 @@ internal static class KillerXray
             Hunted.Logger.LogWarning("Killer x-ray: the game's flat-colour shader was not found, so revealed survivors get no shape.");
             return null;
         }
-        _material = new Material(shader) { name = "Hunted Xray", hideFlags = HideFlags.HideAndDontSave };
-        _material.SetColor("_Color", new Color(SurvivorReveal.Color.r, SurvivorReveal.Color.g, SurvivorReveal.Color.b, Tuning.KillerRoom.XrayAlpha));
+        var _material = new Material(shader) { name = "Hunted Xray", hideFlags = HideFlags.HideAndDontSave };
+        _material.SetColor("_Color", new Color(colour.r, colour.g, colour.b, Tuning.KillerRoom.XrayAlpha));
         _material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
         _material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
         _material.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Back);
@@ -125,7 +125,7 @@ internal static class KillerXray
         _material.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Greater);
         _material.SetFloat("_ZBias", -1f);
         _material.renderQueue = 4000; // after everything else
-        Hunted.Logger.LogInfo("Killer x-ray ready: revealed survivors show as yellow shapes through walls.");
+        Materials[colour] = _material;
         return _material;
     }
 }

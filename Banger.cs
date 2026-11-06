@@ -43,6 +43,7 @@ internal static class Banger
     private static float _uses;
     private static bool _usesReady;
     private static bool _held;           // the killer's side: a head is in the hands (or on its way there)
+    internal static bool Holding => _held;
     private static EnemyBang? _heldBang; // the killer's side: which one
     private static float _cooldown;
     private static Sprite? _icon;
@@ -80,8 +81,8 @@ internal static class Banger
 
     internal static void Tick(float dt)
     {
-        if (!KillerRole.ModeActive || KillerRole.KillerSteamId == null)
-            return;
+        if (!KillerRole.ModeActive || KillerRole.KillerSteamId == null || KillerKinds.Current != KillerKind.Skelespawn)
+            return; // the bomber heads are Skelespawn's
         Known.RemoveAll(b => b == null);
         if (SemiFunc.IsMasterClientOrSingleplayer())
             HostTick();
@@ -126,7 +127,7 @@ internal static class Banger
     /// <summary>A slot key was pressed. Returns true when the game should handle the press itself.</summary>
     internal static bool OnSlotPressed(int index)
     {
-        if (!KillerRole.ModeActive || !KillerRole.LocalIsKiller)
+        if (!KillerRole.ModeActive || !KillerRole.LocalIsKiller || KillerKinds.Current != KillerKind.Skelespawn)
             return true;
         if (index != 1)
         {
@@ -207,7 +208,7 @@ internal static class Banger
     /// <summary>Shows the head as the icon of slot 2, with a bar for every use that is ready. Called after the slot's own update, every frame.</summary>
     internal static void DrawSlot(InventorySpot spot)
     {
-        if (!KillerRole.ModeActive || !KillerRole.LocalIsKiller || spot.inventorySpotIndex != 1 || spot.CurrentItem != null)
+        if (!KillerRole.ModeActive || !KillerRole.LocalIsKiller || KillerKinds.Current != KillerKind.Skelespawn || spot.inventorySpotIndex != 1 || spot.CurrentItem != null)
             return;
         if (!spot.IsOccupied())
             spot.currentState = InventorySpot.SpotState.Occupied;

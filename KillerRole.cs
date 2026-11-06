@@ -15,9 +15,8 @@ internal static class KillerRole
     /// <summary>Every survivor: the players except the killer, and the bots (at least 1, so a lone survivor still has something to complete).</summary>
     internal static int SurvivorCount => Mathf.Max(1, PlayerSurvivorCount + BotRoster.Count);
 
-    /// <summary>The players who are not the killer. A lone player is a survivor unless they are the killer (ticked in the lobby).</summary>
-    internal static int PlayerSurvivorCount
-        => PlayerCountForMode >= 2 ? PlayerCountForMode - 1 : (KillerSteamId != null || BotRoster.KillerExpected ? 0 : 1);
+    /// <summary>The players who are not the killer: everyone but the host.</summary>
+    internal static int PlayerSurvivorCount => Mathf.Max(0, PlayerCountForMode - 1);
 
     internal static int PlayerCountForMode => PhotonNetwork.InRoom ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
 
@@ -71,6 +70,7 @@ internal static class KillerRole
         ValuableSpawner.Reset();
         KillerWeapon.Reset();
         Banger.Reset();
+        Everseer.Reset();
         KillerVision.Reset();
         KillerLook.Reset();
         SurvivorReveal.Reset();
@@ -82,6 +82,7 @@ internal static class KillerRole
         CartSpawner.Reset();
         MapMarkers.Reset();
         KillerRoomMap.Reset();
+        KillerRoomOutline.Reset();
         TruckMapCover.Reset();
         MapDump.Reset();
         KillerEnemyContacts.Reset();
@@ -130,6 +131,7 @@ internal static class KillerRole
         if (KillerSteamId != null && players.Any(p => p.steamID == KillerSteamId))
             return;
 
+        KillerKinds.HostPublish(); // normally already sent when the game started
         var pick = Pick(players);
         Publish(pick);
         Apply(pick);
@@ -139,15 +141,11 @@ internal static class KillerRole
 
     private static string? Pick(List<PlayerAvatar> players)
     {
-        // The host ticked someone in the lobby's player list; otherwise (or if they left) it is random.
-        var chosen = KillerChoice.Chosen(players);
-        if (chosen != null)
-            return chosen.steamID;
-
-        // Alone, unticked means a survivor with nobody hunting (to test the survivor side); with others it is a random killer.
-        if (players.Count < 2)
-            return null;
-        return players[Random.Range(0, players.Count)].steamID;
+        // The host is always the killer (this runs on the host, so that is the local player).
+        var host = players.FirstOrDefault(p => p.isLocal);
+        if (host != null)
+            return host.steamID;
+        return players.Count > 0 ? players[Random.Range(0, players.Count)].steamID : null;
     }
 
     private static void Publish(string? steamId)

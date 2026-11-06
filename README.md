@@ -1,6 +1,6 @@
 # Hunted
 
-An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **the killer**: invulnerable, fast, huge and armed with a sword. Everyone else is a **survivor** who has to fill the extraction points with valuables and escape in a truck.
+An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **the killer**: invulnerable, fast and huge, playing one of two killers with their own powers. Everyone else is a **survivor** who has to fill the extraction points with valuables and escape in a truck.
 
 ![The killer in a hallway](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-hallway.jpg)
 
@@ -8,10 +8,10 @@ An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **t
 
 ## How a round works
 
-- The host ticks the killer's box in the lobby. If nobody is ticked, the killer is random.
+- The host is the killer, and picks which killer to play in the lobby. Survivors don't see the choice until the round starts.
 - The killer starts in the **killer room** in the middle of the map, and survivors start far from it.
 - Survivors need one completed extraction point per survivor, and there are spares. More survivors make a longer map.
-- Once enough points are done, both trucks open. Survivors win when every living survivor is inside one.
+- Once enough points are done, both trucks open. Survivors win when every living survivor is inside one. Nothing can hurt, push or tumble a survivor inside a truck.
 - The killer wins by killing every survivor, or when the time limit runs out (15 minutes by default).
 - Dead survivors leave a head that teammates can bring back, as in the normal game.
 - Only small valuables spawn, and they respawn over time. There are no monsters by default.
@@ -19,13 +19,22 @@ An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **t
 ## The killer
 
 - Cannot be hurt or tumbled, cannot sprint, and cannot enter the trucks or pick up valuables, carts or heads.
-- **Sword:** oversized and hurts only survivors. It runs on energy, which drains over time and with each hit, and recharges in the killer room. It can be stowed but not dropped, and stowing it lets the killer walk at full speed.
-- **Bomber heads (key 2):** three uses, and one comes back every 30 seconds. Throw one and it hunts the nearest survivor, then explodes for triple damage.
-- **Killer room:** the killer is faster and hits harder here, and any survivor inside is revealed through walls and on the map.
-- **Map:** zoomed out, but shows no heads, carts, items or valuables.
+- **Killer room:** the killer always sees its corners marked through walls, in a light shade of their colour. The killer is faster and hits harder here, and any survivor inside is revealed through walls and on the map, until 3 seconds after they leave.
+- **Map:** zoomed out, but shows no heads, carts, items or valuables. Survivors see the killer room like any other room.
 - **Falling:** the killer floats back out of holes.
+- **Sound:** the killer's steps, voice and weapons are deep and carry far.
 
 ![A bomber head closing in](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/bomber-head-closeup.jpg)
+
+## Killers
+
+- **Skelespawn:** a skeleton, white with red armour, red eyes and a red glow.
+  - **Sword (key 1):** oversized and hurts only survivors, pushing them back. It runs on energy, which drains over time and with each hit, and recharges in the killer room. It can be stowed but not dropped. With the sword out Skelespawn walks at 75% of a survivor's speed, and stowing it gives back its full speed.
+  - **Bomber heads (key 2):** three uses, and one comes back every 30 seconds. Throw one and it hunts the nearest survivor, then explodes for triple damage.
+- **Everseer:** a druid in a mask and antlers, all purple, with purple eyes and a purple glow. Its killer room is purple. It has two abilities of its own:
+  - **Mask (key 1):** one shot of the eye laser, and it only opens with a shot ready. As it opens the laser builds up, with the cart laser's build-up sound and the screen and eyes growing more purple. When it's ready there's a click and a strong purple throb, and **E** fires it at once: purple beams from its eyes for 2 seconds. They go through walls, hit hard, knock back and tumble. The mask closes when the shot is over. With the mask on the Everseer walks at 75% of a survivor's speed, and survivors see it glow purple, brighter as the laser gets ready. The slot holds 8 shots, one bar each. The charge drains slowly and recharges in the killer room, like the sword's.
+  - **Wand (key 2):** the Staff of Seeing, a purple, quieter version of the game's Void staff that is always charged (no need to raise it). Where its shot meets a ceiling, wall or floor, a small eye is planted. Three charges, and one comes back every 30 seconds (twice as fast in the killer room). An eye is silent and shut until it sees a survivor, then it opens and watches them, revealing them to the Everseer until 3 seconds after it loses sight. It makes no sound and puts nothing on the spotted survivor's screen; they only know if they see it open. The Everseer always sees its eyes through walls, in purple.
+  - Survivors destroy an eye by holding grab on it for 5 seconds, from any distance, as long as nothing is in the way. Bots destroy the eyes they notice.
 
 ## How the killer finds survivors
 
@@ -37,9 +46,9 @@ An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **t
 ## Survivors
 
 - Start with 200 health and slowly regenerate.
-- **Boost:** when revived, or hit down to half health or less, a survivor runs without tiring and cannot be tumbled for a few seconds.
+- **Boost:** when revived, or hit down to half health or less, a survivor runs without tiring and cannot be tumbled for a few seconds. Their screen turns gold while it lasts.
 - **Heartbeat:** within about 24 m of the killer, survivors hear a heartbeat that speeds up as the killer gets closer.
-- **Chase music:** when the killer has a survivor in sight up close, both of them hear the chase music until the killer loses them.
+- **Chase music:** when the killer has a survivor in sight up close, both of them hear a shock sound and then the chase music until the killer loses them.
 
 ## Bots
 
@@ -49,7 +58,7 @@ A slider in the lobby adds up to 5 bot survivors, with any number of players. Th
 
 Singleplayer, Public Game and Tutorial are hidden while the mod is installed. Use **Host Hunted** or **Join Hunted** in the main menu, and disable the mod to play the normal game.
 
-If you play alone, nobody is the killer unless you tick your own box, and a killer on their own needs at least one bot.
+If you play alone, you are the killer and need at least one bot.
 
 ## Settings
 
@@ -71,14 +80,16 @@ The config file is `BepInEx/config/Prussian.Hunted.cfg`. In a lobby, the host's 
 
 ## Compatibility
 
-- Requires **BepInExPack** and **MenuLib**.
+- Requires **BepInExPack** and **MenuLib**. Mod managers also install **REPOConfig**, which lets you change the settings in game; Hunted works without it.
 - Mods that change the main menu, the lobby list, player cosmetics or level generation may conflict.
 - Please send bug reports with the host's `BepInEx/LogOutput.log`.
 
 ## Credits
 
 - Menu music: "Ambient Horror Track 01" by Cleyton Kauffman (CC0, OpenGameArt).
-- Chase music: "The Hunt" by Sudocolon (CC0, OpenGameArt).
+- Skelespawn's chase music: "The Hunt" by Sudocolon (CC0, OpenGameArt).
+- Everseer's chase music: "Hunter-class Lifeform" by Vitalezzz (CC0, OpenGameArt).
+- Chase sting: the piano sting from "String and piano horror stings" by congusbongus (CC0, OpenGameArt).
 
 ## License
 

@@ -6,14 +6,17 @@ using UnityEngine;
 namespace Hunted;
 
 /// <summary>
-/// How the killer looks: whatever cosmetics they own are replaced by every skeleton cosmetic the game has, the whole outfit is white,
-/// and their eyes are plain glowing red circles. Both are decided locally on every client (cosmetics are built from a list of numbers each client receives, and
-/// the killer is known to everyone), so nothing needs to be synced.
+/// How the killer looks: whatever cosmetics they own are replaced by their killer's outfit, and their eyes are plain glowing circles in the killer's colour.
+///  - Skelespawn: every skeleton cosmetic the game has; a white body with red armour.
+///  - Everseer: a mask, branch antlers, a beard, a wizard's robe and a grabber of petals; a purple body with lavender clothes.
+/// Both are decided locally on every client (cosmetics are built from a list of numbers each client receives, and the killer and their kind are known to
+/// everyone), so nothing needs to be synced.
 /// </summary>
 internal static class KillerLook
 {
     private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
     private static List<int>? _skeleton;
+    private static List<int>? _everseer;
     private static float _timer;
     private static PlayerAvatar? _logged;
     private static int _cosmeticAttempts;
@@ -28,6 +31,21 @@ internal static class KillerLook
     }
 
     private static readonly Color CosmeticRed = new(0.85f, 0f, 0f, 1f);
+    private static readonly Color EverseerBody = new(0.42f, 0.1f, 0.72f, 1f);
+    private static readonly Color EverseerCloth = new(0.78f, 0.62f, 1f, 1f);
+
+    // The game's names of the Everseer's cosmetics, one for each place on the body.
+    private static readonly string[] EverseerOutfit =
+    {
+        "Cosmetic - Face Top - Mask",
+        "Cosmetic - Hat - Branch Antlers",
+        "Cosmetic - Head Bottom - Beard",
+        "Cosmetic - Body Top - Wizard Shirt",
+        "Cosmetic - Body Bottom - Wizard Bottom",
+        "Cosmetic - Arm Left - Wizard Sleeve",
+        "Cosmetic - Arm Right - Wizard Sleeve",
+        "Cosmetic - Grabber Mesh - Petals",
+    };
 
     // The skeleton set, plus the skull belt (which is named "skull", not "skeleton").
     private static bool IsSkeleton(CosmeticAsset? asset) => asset != null
@@ -51,6 +69,34 @@ internal static class KillerLook
         }
         return _skeleton.ToArray();
     }
+
+    /// <summary>The game's indices of the Everseer's cosmetics (those the game has; a missing one is left out).</summary>
+    internal static int[] EverseerIndices()
+    {
+        var assets = MetaManager.instance != null ? MetaManager.instance.cosmeticAssets : null;
+        if (assets == null)
+            return System.Array.Empty<int>();
+        if (_everseer == null || _everseer.Count == 0)
+        {
+            _everseer = new List<int>();
+            foreach (var name in EverseerOutfit)
+            {
+                var index = assets.FindIndex(a => a != null && string.Equals(a.name.Trim(), name, System.StringComparison.OrdinalIgnoreCase));
+                if (index >= 0)
+                    _everseer.Add(index);
+                else
+                    Hunted.Logger.LogWarning($"The Everseer's cosmetic \"{name}\" is not in the game.");
+            }
+            Hunted.Logger.LogInfo($"Everseer cosmetics: {string.Join(", ", _everseer.Select(i => assets[i].name))}");
+        }
+        return _everseer.ToArray();
+    }
+
+    /// <summary>The cosmetics of this round's killer.</summary>
+    internal static int[] OutfitIndices() => KillerKinds.Current == KillerKind.Everseer ? EverseerIndices() : SkeletonIndices();
+
+    private static bool InOutfit(CosmeticAsset? asset)
+        => asset != null && (KillerKinds.Current == KillerKind.Everseer ? EverseerOutfit.Any(n => string.Equals(asset.name.Trim(), n, System.StringComparison.OrdinalIgnoreCase)) : IsSkeleton(asset));
 
     internal static bool BelongsToKiller(PlayerCosmetics cosmetics)
     {
@@ -76,8 +122,8 @@ internal static class KillerLook
         return local != null && KillerRole.IsKiller(local);
     }
 
-    /// <summary>The menu avatar's eyes, as the killer's: plain glowing red circles (no light, it is only a picture).</summary>
-    internal static void RedEyes(PlayerAvatarVisuals visuals)
+    /// <summary>The menu avatar's eyes, as the killer's: plain glowing circles in the killer's colour (no light, it is only a picture).</summary>
+    internal static void KillerEyes(PlayerAvatarVisuals visuals)
     {
         var eyes = visuals.playerEyes;
         if (eyes == null)
@@ -85,7 +131,7 @@ internal static class KillerLook
         foreach (var part in new[] { eyes.eyeLeft, eyes.eyeRight, eyes.pupilLeft, eyes.pupilRight })
             if (part != null)
                 foreach (var renderer in part.GetComponentsInChildren<Renderer>(true))
-                    Tint(renderer, new Color(1f, 0f, 0f, 1f), Tuning.Killer.EyeGlow);
+                    Tint(renderer, KillerKinds.Colour, Tuning.Killer.EyeGlow);
     }
 
     internal static void Tick(float dt)
@@ -101,18 +147,20 @@ internal static class KillerLook
         if (killer == null || killer.playerAvatarVisuals == null)
             return;
 
-        EnsureSkeleton(killer);
+        EnsureOutfit(killer);
         if (killer.playerCosmetics != null)
-            WhitenOutfit(killer.playerCosmetics);
+            ColourOutfit(killer.playerCosmetics);
         GlowEyes(killer);
     }
 
     /// <summary>
-    /// The killer's skin (the body itself) is white and every cosmetic item on it is red: the player colour is replaced on every part, and the cosmetics
-    /// that are not tinted by it (the skeleton ones) lose their own colour too. The surface's relief and the lighting still show its shape. The eyes are left alone.
+    /// The killer's colours. Skelespawn: the skin (the body itself) is white and every cosmetic item on it is red and plain. Everseer: the skin is purple and the
+    /// cosmetic items are lavender, with their own pictures kept. The player colour is replaced on every part. The surface's relief and the lighting still show
+    /// its shape. The eyes are left alone.
     /// </summary>
-    internal static void WhitenOutfit(PlayerCosmetics cosmetics)
+    internal static void ColourOutfit(PlayerCosmetics cosmetics)
     {
+        var everseer = KillerKinds.Current == KillerKind.Everseer;
         var eyes = cosmetics.playerAvatarVisuals != null ? cosmetics.playerAvatarVisuals.playerEyes : null;
         var eyeParts = eyes == null ? new Transform?[0] : new[] { eyes.eyeLeft, eyes.eyeRight, eyes.pupilLeft, eyes.pupilRight };
         foreach (var part in cosmetics.playerMaterials)
@@ -124,9 +172,10 @@ internal static class KillerLook
             // The skeleton overlays wrap the body parts and draw the bones on them: they are part of the white body and keep their picture.
             // The other cosmetic items (armour, teeth, belt, grabber) are red and plain.
             var overlay = part!.cosmetic != null && IsOverlay(part.cosmetic.cosmeticAsset);
-            var colour = part.cosmetic != null && !overlay ? CosmeticRed : Color.white; // cosmetic items know their cosmetic; the body does not
+            var item = part.cosmetic != null && !overlay; // cosmetic items know their cosmetic; the body does not
+            var colour = everseer ? (item ? EverseerCloth : EverseerBody) : item ? CosmeticRed : Color.white;
             SetColor(material, "_AlbedoColor", new Color(colour.r, colour.g, colour.b, albedo.a));
-            if (!overlay)
+            if (!overlay && !(everseer && item))
                 SetTexture(material, "_AlbedoTexture", Texture2D.whiteTexture);
             if (part.tintType != PlayerMaterial.TintType.Albedo)
                 SetColor(material, "_EmissionColor", Color.black); // a glow in the player's colour would stay coloured
@@ -136,7 +185,7 @@ internal static class KillerLook
     }
 
     // The killer may have been picked after the cosmetics were built (or the cosmetics arrived late): build them again.
-    private static void EnsureSkeleton(PlayerAvatar killer)
+    private static void EnsureOutfit(PlayerAvatar killer)
     {
         var cosmetics = killer.playerCosmetics;
         if (cosmetics == null || cosmetics.firstSetup || !LevelGenerator.Instance || !LevelGenerator.Instance.Generated)
@@ -146,7 +195,7 @@ internal static class KillerLook
             _cosmeticsFor = killer;
             _cosmeticAttempts = 0;
         }
-        if (cosmetics.cosmeticEquipped.Any(c => c != null && IsSkeleton(c.cosmeticAsset)) || _cosmeticAttempts >= 6)
+        if (cosmetics.cosmeticEquipped.Any(c => c != null && InOutfit(c.cosmeticAsset)) || _cosmeticAttempts >= 6)
             return;
         _cosmeticAttempts++;
         cosmetics.SetupCosmeticsLogic(cosmetics.cosmeticEquippedRaw.ToArray(), false);
@@ -163,7 +212,7 @@ internal static class KillerLook
             if (white == null)
                 continue;
             foreach (var renderer in white.GetComponentsInChildren<Renderer>(true))
-                Tint(renderer, new Color(1f, 0f, 0f, 1f), glow);
+                Tint(renderer, KillerKinds.Colour, glow);
             // The light is only for those who look at the killer: the killer's own view already has their red light.
             if (!killer.isLocal && white.Find("Hunted Eye Light") == null)
             {
@@ -171,17 +220,17 @@ internal static class KillerLook
                 lightObject.transform.SetParent(white, false);
                 var light = lightObject.AddComponent<Light>();
                 light.type = LightType.Point;
-                light.color = new Color(1f, 0f, 0f);
+                light.color = KillerKinds.Colour;
                 light.range = Tuning.Killer.EyeLightRange;
                 light.intensity = Tuning.Killer.EyeLightIntensity;
                 light.shadows = LightShadows.None;
             }
         }
-        // The pupils get the same red, so each eye is one plain bright red circle.
+        // The pupils get the same colour, so each eye is one plain bright circle.
         foreach (var pupil in new[] { eyes.pupilLeft, eyes.pupilRight })
             if (pupil != null)
                 foreach (var renderer in pupil.GetComponentsInChildren<Renderer>(true))
-                    Tint(renderer, new Color(1f, 0f, 0f, 1f), glow);
+                    Tint(renderer, KillerKinds.Colour, glow);
 
         if (_logged != killer)
         {
@@ -242,12 +291,12 @@ internal static class KillerLook
 [HarmonyPatch]
 static class KillerLookPatches
 {
-    // The killer wears every skeleton cosmetic instead of what they own, as every client builds them.
+    // The killer wears their killer's outfit instead of what they own, as every client builds them.
     [HarmonyPrefix, HarmonyPatch(typeof(PlayerCosmetics), "SetupCosmeticsLogic")]
     private static void SetupCosmetics_Prefix(PlayerCosmetics __instance, ref int[] _cosmeticEquipped)
     {
         if (KillerLook.BelongsToKiller(__instance))
-            _cosmeticEquipped = KillerLook.SkeletonIndices();
+            _cosmeticEquipped = KillerLook.OutfitIndices();
     }
 
     // The player's colours are applied after the cosmetics and whenever they change; the killer's are white right after.
@@ -256,9 +305,9 @@ static class KillerLookPatches
     {
         if (KillerLook.BelongsToKiller(__instance))
         {
-            KillerLook.WhitenOutfit(__instance);
+            KillerLook.ColourOutfit(__instance);
             if (__instance.playerAvatarVisuals != null && __instance.playerAvatarVisuals.isMenuAvatar)
-                KillerLook.RedEyes(__instance.playerAvatarVisuals);
+                KillerLook.KillerEyes(__instance.playerAvatarVisuals);
         }
     }
 
@@ -267,9 +316,9 @@ static class KillerLookPatches
     {
         if (KillerLook.BelongsToKiller(__instance))
         {
-            KillerLook.WhitenOutfit(__instance);
+            KillerLook.ColourOutfit(__instance);
             if (__instance.playerAvatarVisuals != null && __instance.playerAvatarVisuals.isMenuAvatar)
-                KillerLook.RedEyes(__instance.playerAvatarVisuals);
+                KillerLook.KillerEyes(__instance.playerAvatarVisuals);
         }
     }
 }

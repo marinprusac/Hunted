@@ -401,10 +401,13 @@ static class EndgameEnemyPatches
     }
 }
 
-/// <summary>The killer room has its own colour on the map, so it is easy to find.</summary>
+/// <summary>
+/// The killer room's lights are in the killer's colour, for everyone. On the killer's map the room has that colour too, so it is easy to find; the survivors'
+/// map shows it like any other room (covered until they find it, and in the usual colours once they have), so its colour does not tell them which killer it is.
+/// </summary>
 internal static class KillerRoomMap
 {
-    private static readonly Color Tint = new(0.35f, 0f, 0f); // dark, so the yellow dots of revealed survivors stand out on it
+    private static Color Tint => KillerKinds.Tinted(Color.white, 0.35f); // dark, so the yellow dots of revealed survivors stand out on it
     private static readonly HashSet<int> Done = new();
 
     internal static void Reset()
@@ -421,18 +424,15 @@ internal static class KillerRoomMap
         if (module == null)
             return;
 
-        TintRoom(module);
+        if (KillerRole.LocalIsKiller)
+            TintRoom(module);
         TintLights(module);
     }
 
-    // Every light in the killer room is red: the lights themselves and the glowing bulbs, with their brightness kept.
+    // Every light in the killer room is in the killer's colour: the lights themselves and the glowing bulbs, with their brightness kept.
     private static readonly HashSet<int> LightsDone = new();
 
-    private static Color Red(Color color)
-    {
-        var strength = Mathf.Max(color.r, color.g, color.b);
-        return new Color(strength, 0f, 0f, color.a);
-    }
+    private static Color Red(Color color) => KillerKinds.Tinted(color);
 
     private static void TintLights(Module module)
     {

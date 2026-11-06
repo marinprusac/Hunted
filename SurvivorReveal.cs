@@ -7,7 +7,7 @@ namespace Hunted;
 
 /// <summary>
 /// Revealing a survivor to the killer, whatever the reason. A survivor who is revealed gets, all at once and always the same: a yellow see-through shape the killer sees
-/// through walls (see KillerXray), a yellow dot on the killer's map, a chime from the survivor's direction when they become revealed, and a quiet hum from them for as long as they stay revealed. Everything that can reveal
+/// through walls (see KillerXray), a yellow dot on the killer's map, a bell from the survivor's direction when they become revealed, and a quiet hum from them for as long as they stay revealed (and a few seconds after the reason is gone). Everything that can reveal
 /// a survivor (the killer room today, perks later) only has to say so by adding a source with <see cref="AddSource"/>; the rest is done here, on the killer's own computer.
 /// </summary>
 internal static class SurvivorReveal
@@ -37,6 +37,7 @@ internal static class SurvivorReveal
     private static readonly Dictionary<Component, float> LastChime = new();
     private static readonly Dictionary<Component, MapCustom> Markers = new();
     private static readonly Dictionary<Component, AudioSource> Hums = new();
+    private static readonly Dictionary<Component, float> RevealedUntil = new();
     private static Sprite? _dot;
     private static float _timer;
     private static bool _registered;
@@ -55,6 +56,7 @@ internal static class SurvivorReveal
     {
         Revealed.Clear();
         LastChime.Clear();
+        RevealedUntil.Clear();
         foreach (var marker in Markers.Values)
             RemoveMarker(marker);
         Markers.Clear();
@@ -91,13 +93,20 @@ internal static class SurvivorReveal
 
         // Survivors that are gone (dead, left, or out of the level) are not revealed any more.
         foreach (var key in Revealed.Where(k => k == null || !seen.Contains(k)).ToList())
+        {
             Hide(key);
+            if (key != null)
+                RevealedUntil.Remove(key);
+        }
     }
 
     private static void Update(Subject subject, HashSet<Component> seen)
     {
         seen.Add(subject.Key);
-        var revealed = Sources.Any(source => source(subject));
+        // A reveal lingers: a survivor stays revealed for a few seconds after the last reason to reveal them (stepping out of the killer room) is gone.
+        if (Sources.Any(source => source(subject)))
+            RevealedUntil[subject.Key] = Time.time + Tuning.KillerRoom.RevealLingerSeconds;
+        var revealed = RevealedUntil.TryGetValue(subject.Key, out var until) && Time.time < until;
         if (!revealed)
         {
             if (Revealed.Contains(subject.Key))
@@ -105,17 +114,19 @@ internal static class SurvivorReveal
             return;
         }
 
+        var chimed = false;
         if (Revealed.Add(subject.Key) && (!LastChime.TryGetValue(subject.Key, out var last) || Time.time - last >= Tuning.KillerRoom.AlertCooldownSeconds))
         {
             // The chime comes from the survivor, so the killer hears which way they are. At most once per cooldown however often they come and go.
             LastChime[subject.Key] = Time.time;
             RoomAlert.Play(subject.Position);
+            chimed = true;
         }
         KillerXray.Show(subject.Key, subject.Root);
         // A hum comes from the survivor for as long as they are revealed.
         if (!Hums.TryGetValue(subject.Key, out var hum) || hum == null)
         {
-            hum = RoomAlert.StartHum(subject.Root);
+            hum = RoomAlert.StartHum(subject.Root, afterBell: chimed);
             if (hum != null)
                 Hums[subject.Key] = hum;
         }
@@ -129,8 +140,7 @@ internal static class SurvivorReveal
         KillerXray.Hide(key);
         if (Hums.TryGetValue(key, out var hum))
         {
-            if (hum != null)
-                UnityEngine.Object.Destroy(hum.gameObject);
+            RoomAlert.StopHum(hum); // it dies away rather than stopping dead
             Hums.Remove(key);
         }
         if (Markers.TryGetValue(key, out var marker))

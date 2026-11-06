@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.3.0
+
+- New killer: **Everseer**, a purple druid in a mask and antlers with its own chase music. The first killer is now called **Skelespawn**.
+- Everseer's mask (key 1): one shot of an eye laser per opening. It builds up as the mask opens and fires with E once ready. It goes through walls, hits hard, knocks back and tumbles. While the mask is on, the Everseer's screen turns purple, it walks at 75% of a survivor's speed, and survivors see it glow purple.
+- Everseer's wand (key 2): the Staff of Seeing, a purple, quieter Void staff that is always charged, whose shot plants a small eye where it lands. Eyes reveal the survivors they see, until 3 seconds after, and the Everseer sees them through walls. Survivors and bots destroy one by holding grab on it for 5 seconds, from any distance.
+- A boosted survivor's screen turns gold.
+- Survivors inside a truck can't be hurt, knocked back or tumbled.
+- The host is always the killer, and picks the killer with a slider in the lobby. Survivors don't see which one.
+- The killer's glow and the killer room take the killer's colour.
+- Survivors' maps show the killer room like any other room.
+- The killer always sees the killer room's corners through walls.
+- No money count at the top of the screen when an extraction point is completed.
+- A shock sound plays as a chase starts.
+- With the sword out the killer walks at 75% of a survivor's speed, and a hit pushes the survivor back.
+- Survivors in the killer room stay revealed for 3 seconds after leaving. The alert is a single bell that flows into the hum, and the hum fades out.
+- Only the inventory slots in use are shown: two for the killer, none for survivors. Items in use stay in their slot, brighter and bigger.
+- The killer's sounds, now including their weapons, are deeper and carry further.
+- Mod managers also install REPOConfig, for changing settings in game. Hunted works without it.
+
 ## 0.2.1
 
 - Works with R.E.P.O. v0.5.1: hosting a game no longer fails.

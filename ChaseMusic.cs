@@ -12,17 +12,22 @@ namespace Hunted;
 ///
 /// Chase: the killer has a survivor in the open, close and in front of them. On the killer's computer that is any survivor they can see
 /// (a hidden crouching survivor does not count); on a survivor's computer it is only themselves. Once that has lasted a moment the chase music
-/// comes in, replaces the heartbeat and holds the game's own music back, and it dies away some seconds after the killer lost sight of them.
+/// comes in with a shock sound, replaces the heartbeat and holds the game's own music back, and it dies away some seconds after the killer lost sight of them.
 /// </summary>
 internal static class ChaseMusic
 {
-    private const string Track = "Hunted.ChaseMusic.ogg";
+    // Each killer has their own chase music.
+    private static string Track => KillerKinds.Current == KillerKind.Everseer ? "Hunted.EverseerChaseMusic.ogg" : "Hunted.ChaseMusic.ogg";
+    private const string Sting = "Hunted.ChaseSting.ogg";
 
     private static GameObject? _host;
     private static AudioSource? _music;
     private static AudioSource? _beat;
     private static AudioClip? _beatClip;
+    private static AudioClip? _stingClip;
+    private static AudioSource? _sting;
     private static bool _loading;
+    private static string? _loadedTrack;
 
     private static bool _sees;
     private static float _seenFor;
@@ -62,8 +67,13 @@ internal static class ChaseMusic
         {
             _seenFor += dt;
             _lostFor = 0f;
-            if (_seenFor >= values.ChaseStartSeconds)
+            if (_seenFor >= values.ChaseStartSeconds && !_chasing)
+            {
                 _chasing = true;
+                // The shock as the killer spots them, as in Dead by Daylight: once per chase, right as the music comes in.
+                if (_sting != null && _stingClip != null)
+                    _sting.PlayOneShot(_stingClip, values.StingVolume);
+            }
         }
         else
         {
@@ -136,6 +146,9 @@ internal static class ChaseMusic
             _beat.playOnAwake = false;
             _beat.spatialBlend = 0f;
             _beatClip = MakeHeartbeat();
+            _sting = _host.AddComponent<AudioSource>();
+            _sting.playOnAwake = false;
+            _sting.spatialBlend = 0f;
             _host.AddComponent<ChaseMusicHost>();
         }
         if (AudioManager.instance != null)
@@ -144,11 +157,23 @@ internal static class ChaseMusic
                 _music.outputAudioMixerGroup = AudioManager.instance.MusicMasterGroup;
             if (_beat!.outputAudioMixerGroup == null)
                 _beat.outputAudioMixerGroup = AudioManager.instance.SoundMasterGroup;
+            if (_sting!.outputAudioMixerGroup == null)
+                _sting.outputAudioMixerGroup = AudioManager.instance.SoundMasterGroup;
         }
-        if (_music!.clip == null && !_loading)
+        var runner = _host.GetComponent<ChaseMusicHost>();
+        if (_stingClip == null && !_loading)
         {
             _loading = true;
-            _host.GetComponent<ChaseMusicHost>().StartCoroutine(EmbeddedAudio.Load(Track, clip => { if (_music != null) _music.clip = clip; }));
+            runner.StartCoroutine(EmbeddedAudio.Load(Sting, clip => _stingClip = clip));
+        }
+        // The track of this round's killer (changed only while it is not playing: between chases, as a new round's killer may be another one).
+        var track = Track;
+        if (_loadedTrack != track && !_music!.isPlaying)
+        {
+            _loadedTrack = track;
+            _music.clip = null;
+            _stoppedAt = -999f; // the other track starts from the top
+            runner.StartCoroutine(EmbeddedAudio.Load(track, clip => { if (_music != null && _loadedTrack == track) _music.clip = clip; }));
         }
     }
 

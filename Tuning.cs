@@ -47,6 +47,8 @@ internal static class Tuning
         public float XrayAlpha = 0.4f;
         /// <summary>How loud the hum that follows a revealed survivor is (the chime is at the full 1).</summary>
         public float RevealHumVolume = 0.2f;
+        /// <summary>A revealed survivor stays revealed for this long after leaving the killer room.</summary>
+        public float RevealLingerSeconds = 3f;
     }
 
     [Serializable]
@@ -82,9 +84,12 @@ internal static class Tuning
     {
         /// <summary>How strong the sword's tumble on a hit survivor is compared to the game's (1 = a 1 s tumble with a push and spin). Scales the time, the push and the spin.</summary>
         public float TumbleMultiplier = 0.5f;
-        /// <summary>How fast the sword must move to count as a swing, as a multiple of the game's (1 = the game's; lower is easier to swing).</summary>
+        /// <summary>How hard a hit pushes the survivor away (the game's sword does not push at all; the Everseer's laser pushes with 30).</summary>
+        public float PushForce = 8f;
+        /// <summary>How fast the sword must move to count as a swing. Replaces the game's value (1.15 for the sword); lower is easier to swing.</summary>
         public float SwingDetectMultiplier = 0.5f;
-        /// <summary>The killer's walking speed while the sword is in their hands, as a multiple of their normal speed (0.75 = a quarter slower). Stowing the sword removes it.</summary>
+        /// <summary>The killer's walking speed while the sword is in their hands, as a multiple of a survivor's walking speed (1 = the same as a survivor; the killer room's boost still adds to it).
+        /// Stowing the sword gives the killer their own, faster walk back (Killer / WalkSpeedMultiplier in the config).</summary>
         public float HeldSpeedMultiplier = 0.75f;
         /// <summary>Size of the sword compared to the game's (1 = the game's). Its hit box and reach grow with it, and everyone sees the same size.</summary>
         public float Scale = 1.7f;
@@ -125,8 +130,8 @@ internal static class Tuning
         public float EyeLightIntensity = 1.5f;
         /// <summary>How much louder the killer's sound effects are, how much further they carry, and their pitch (below 1 is deeper).</summary>
         public float SoundVolumeMultiplier = 2f;
-        public float SoundRangeMultiplier = 1.5f;
-        public float SoundPitchMultiplier = 0.75f;
+        public float SoundRangeMultiplier = 2f;
+        public float SoundPitchMultiplier = 0.5f;
         /// <summary>The red light around the killer: how far it reaches (metres; 0 turns it off) and how bright it is.</summary>
         public float RedLightRange = 30f;
         public float RedLightIntensity = 1.2f;
@@ -190,6 +195,54 @@ internal static class Tuning
     }
 
     [Serializable]
+    internal class EverseerValues
+    {
+        /// <summary>How fast the Everseer walks while its mask is on, as a multiple of a survivor's walking speed.</summary>
+        public float MaskSpeedMultiplier = 0.75f;
+        /// <summary>How many laser shots a full charge holds (one bar each; a shot costs one whether it hits anybody or not). The charge also drains slowly over
+        /// time and recharges in the killer room, at the sword's rates (the Sword settings EnergyDrainPerSecond and ChargePerSecond, in percent).</summary>
+        public int LaserShots = 8;
+        /// <summary>How long the laser takes to build up after the right mouse button, and how long it then fires.</summary>
+        public float LaserBootSeconds = 1f;
+        public float LaserShotSeconds = 2f;
+        /// <summary>Damage per hit, and how often a survivor standing in the beam is hit again. More in the killer room, as the sword.</summary>
+        public float LaserDamage = 40f;
+        /// <summary>How hard a hit knocks a survivor back, how hard it throws them into a tumble, and for how long.</summary>
+        public float LaserKnockback = 30f;
+        public float LaserTumbleForce = 25f;
+        public float LaserTumbleSeconds = 0.5f;
+        /// <summary>How much thicker the beams are than the cart laser's, for everyone but the killer.</summary>
+        public float LaserThickness = 1f;
+        /// <summary>How much brighter the beams' lights are than the cart laser's, for everyone but the killer.</summary>
+        public float LaserLight = 2f;
+        /// <summary>How wide an extra solid line down the middle of each beam is, in metres (times the thickness above); 0 for none, the cart laser's beam as it is.</summary>
+        public float LaserCoreWidth = 0f;
+        public float LaserHitCooldown = 0.3f;
+        public float LaserRange = 30f;
+        /// <summary>How the beams look on the killer's own screen, compared to what everyone else sees: thinner and mostly see-through, so they do not block the view.</summary>
+        public float LaserOwnThickness = 1f;
+        public float LaserOwnAlpha = 0.6f;
+        /// <summary>The wand (the game's Void staff): how many charges it holds, and how long one takes to come back (faster in the killer room).</summary>
+        public int WandMaxUses = 3;
+        public float WandSecondsPerUse = 30f;
+        public float WandRoomRechargeMultiplier = 2f;
+        /// <summary>How loud the wand is, and how bright its flashes, compared to the game's Void staff.</summary>
+        public float WandVolume = 0.35f;
+        public float WandFlash = 0.3f;
+        /// <summary>How far a planted eye sees.</summary>
+        public float EyeSightRange = 20f;
+        /// <summary>A survivor can touch (and so destroy) an eye from any distance, by grabbing at it; this is how big an eye counts for that, in metres.</summary>
+        public float EyeTouchRadius = 0.3f;
+        /// <summary>How long a survivor has to hold the grab button on an eye to destroy it.</summary>
+        public float EyeHoldSeconds = 5f;
+        /// <summary>A bot notices an eye after it has had it in plain view in front of it, within this many metres, for about this many seconds (give or take 40%).</summary>
+        public float BotEyeNoticeRange = 12f;
+        public float BotEyeNoticeSeconds = 3f;
+        /// <summary>How big a planted eye is, compared to the game's ceiling eye.</summary>
+        public float EyeScale = 0.5f;
+    }
+
+    [Serializable]
     internal class SurvivorValues
     {
         /// <summary>A survivor's stamina (each stamina upgrade adds 10 on top), and how much faster they sprint than the game's sprint.</summary>
@@ -234,6 +287,8 @@ internal static class Tuning
         public float FadeOutSeconds = 3f;
         /// <summary>A chase that starts within this many seconds of the music dying away picks the music up where it stopped, instead of from the top.</summary>
         public float ResumeWithinSeconds = 20f;
+        /// <summary>How loud the shock sound is that plays as a chase starts.</summary>
+        public float StingVolume = 1f;
     }
 
     [Serializable]
@@ -243,6 +298,7 @@ internal static class Tuning
         public SurvivorValues Survivor = new();
         public BotValues Bots = new();
         public BangerValues Banger = new();
+        public EverseerValues Everseer = new();
         public VisionValues Vision = new();
         public KillerRoomValues KillerRoom = new();
         public BoostValues Boost = new();
@@ -265,6 +321,7 @@ internal static class Tuning
     internal static KillerRoomValues KillerRoom => _data.KillerRoom;
     internal static BoostValues Boost => _data.Boost;
     internal static BangerValues Banger => _data.Banger;
+    internal static EverseerValues Everseer => _data.Everseer;
     internal static SurvivorValues Survivor => _data.Survivor;
     internal static BotValues Bots => _data.Bots;
     internal static RoundValues Round => _data.Round;
@@ -294,7 +351,7 @@ internal static class Tuning
             // built-in scale of 1.4 while the file said 2).
             JsonConvert.PopulateObject(reader.ReadToEnd(), loaded);
             _data = loaded;
-            Hunted.Logger.LogInfo($"Tuning values loaded (killer scale x{loaded.Killer.Scale:0.##}, sword held speed x{loaded.Sword.HeldSpeedMultiplier:0.##}, bomber head damage x{loaded.Banger.DamageMultiplier:0.##}).");
+            Hunted.Logger.LogInfo($"Tuning values loaded (killer scale x{loaded.Killer.Scale:0.##}, sword held speed x{loaded.Sword.HeldSpeedMultiplier:0.##} of a survivor, bomber head damage x{loaded.Banger.DamageMultiplier:0.##}).");
         }
         catch (Exception e)
         {

@@ -1,20 +1,21 @@
 using MenuLib;
-using MenuLib.MonoBehaviors;
 using Photon.Pun;
 using UnityEngine;
 
 namespace Hunted;
 
 /// <summary>
-/// A testing option, kept out of the config file on purpose: a small slider under the lobby's player list, and it resets when the game is restarted.
-///  - BotCount (0 to 5): how many bots, the stand-in survivors the host runs (see Bot.cs). Only the host's counts, so only the host sees it.
-/// (Playing alone as a survivor needs no option: leave yourself unticked in the player list.)
+/// The host's options under the lobby's player list. The host is always the killer, and only the host sees them:
+///  - Killer: which killer to play (see KillerKind). The survivors are not shown it.
+///  - Bots (0 to 5): how many bots, the stand-in survivors the host runs (see Bot.cs).
+/// Both are kept out of the config file on purpose and reset when the game is restarted.
 /// </summary>
-internal static class DebugToggles
+internal static class LobbyOptions
 {
     internal static int BotCount;
 
     private const float Scale = 0.55f;
+    private const float RowHeight = 60f; // between the two sliders, before the scale
     private static GameObject? _container;
     private static Transform? _page;
     private static int _placedFor = -1;
@@ -28,16 +29,19 @@ internal static class DebugToggles
 
         _page = page;
         _placedFor = -1;
-        _container = new GameObject("Hunted Debug Options", typeof(RectTransform));
+        _container = new GameObject("Hunted Lobby Options", typeof(RectTransform));
         var rect = (RectTransform)_container.transform;
         rect.SetParent(page, false);
         rect.localScale = new Vector3(Scale, Scale, 1f);
         Place();
 
-        MenuAPI.CreateREPOSlider("Bots", "", (int count) => BotCount = count, rect, new Vector2(0f, 0f), 0, 5, BotCount);
+        MenuAPI.CreateREPOSlider("Killer", "", (int index) => KillerKinds.HostPick = (KillerKind)index, rect, KillerKinds.Names,
+            KillerKinds.Name(KillerKinds.HostPick), new Vector2(0f, 0f));
+        MenuAPI.CreateREPOSlider("Bots", "", (int count) => BotCount = count, rect, new Vector2(0f, -RowHeight), 0, 5, BotCount);
+        _container.SetActive(SemiFunc.IsMasterClientOrSingleplayer());
     }
 
-    // One row of the list is 32 units tall in the lobby; the option goes just under the last row, wherever that is for this many players.
+    // One row of the list is 32 units tall in the lobby; the options go just under the last row, wherever that is for this many players.
     private static void Place()
     {
         var lobby = MenuPageLobby.instance;

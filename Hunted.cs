@@ -6,7 +6,9 @@ using UnityEngine;
 namespace Hunted;
 
 [BepInDependency("nickklmao.menulib")]
-[BepInPlugin("Prussian.Hunted", "Hunted", "0.2.1")]
+// REPOConfig (in-game settings) is optional: mod managers install it with Hunted, and Hunted works without it.
+[BepInDependency("nickklmao.repoconfig", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInPlugin("Prussian.Hunted", "Hunted", "0.3.0")]
 public class Hunted : BaseUnityPlugin
 {
     internal static Hunted Instance { get; private set; } = null!;
@@ -27,10 +29,10 @@ public class Hunted : BaseUnityPlugin
 
         Tuning.Load();
         HuntedConfig.Bind(Config);
-        MenuLib.MenuAPI.AddElementToLobbyMenu(DebugToggles.Build);
-        MenuLib.MenuAPI.AddElementToLobbyMenu(KillerCheckboxes.BuildHeader);
+        MenuLib.MenuAPI.AddElementToLobbyMenu(LobbyOptions.Build);
         ConfigSync.Init(Config);
         Banger.Init();
+        Everseer.Init();
         BotAvatar.Init();
         Patch();
 
@@ -49,20 +51,25 @@ public class Hunted : BaseUnityPlugin
         Harmony?.UnpatchSelf();
     }
 
-    private void LateUpdate() => KillerWeapon.KeepSize();
+    private void LateUpdate()
+    {
+        KillerWeapon.KeepSize();
+        InventoryLook.Tick();
+    }
 
     private void Update()
     {
         NoSeasonalEvent.Tick();
         ConfigSync.Tick();
-        KillerCheckboxes.Tick();
-        DebugToggles.Tick();
+        LobbyOptions.Tick();
         KillerRole.SessionCheck();
         RoundHud.Tick();
         LevelNumberPatches.HideLevelUi();
         TruckPatches.KeepKillerOutOfTruck();
         KillerWeapon.Tick(Time.deltaTime);
         Banger.Tick(Time.deltaTime);
+        Everseer.Tick(Time.deltaTime);
+        ScreenTint.Tick(Time.deltaTime);
         KillerRescue.Tick(Time.deltaTime);
         KillerBrightness.Tick();
         KillerVision.Tick(Time.deltaTime);
@@ -79,6 +86,7 @@ public class Hunted : BaseUnityPlugin
         KillerLook.Tick(Time.deltaTime);
         SurvivorReveal.Tick(Time.deltaTime);
         ChaseMusic.Tick(Time.deltaTime);
+        InventorySlots.Tick();
         _extractionTimer -= Time.unscaledDeltaTime;
         if (_extractionTimer <= 0f)
         {
@@ -90,6 +98,7 @@ public class Hunted : BaseUnityPlugin
             CartSpawner.Tick(0.25f);
             MapMarkers.Tick();
             KillerRoomMap.Tick();
+            KillerRoomOutline.Tick();
             KillerRoomRules.Tick(0.25f);
             TruckMapCover.Tick();
             PlayerHealthRules.Sync();

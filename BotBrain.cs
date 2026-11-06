@@ -247,6 +247,9 @@ internal partial class Bot
             }
         }
         _headsSeen.RemoveWhere(head => head == null || !head.triggered);
+
+        // The Everseer's eyes, if it notices one: it destroys it (see BotEyes).
+        NoticeEyes(eye, glance);
     }
 
     /// <summary>

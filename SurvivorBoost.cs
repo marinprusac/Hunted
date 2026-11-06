@@ -135,9 +135,8 @@ internal static class SurvivorBoost
                 }
                 if (controller != null)
                     controller.EnergyCurrent = controller.EnergyStart;
-                // Gold edges on the screen for as long as it lasts.
-                if (PostProcessing.Instance != null)
-                    PostProcessing.Instance.VignetteOverride(Gold, 0.4f, 0.9f, 4f, 3f, 0.15f, local.gameObject, 900);
+                // The screen turns gold for as long as it lasts (gold edges and a gold wash, as the Everseer's screen turns purple under its mask).
+                ScreenTint.Request(Gold, 0.12f, 0.45f);
             }
             else
             {
