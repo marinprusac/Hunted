@@ -5,8 +5,8 @@ schemaVersion = "0.0.1"
 namespace = "Prussian"
 name = "Hunted"
 # Kept in sync with Hunted.csproj by publish.sh.
-versionNumber = "0.2.0"
-description = "Early development, Dead by Daylight inspired. One invulnerable killer with a sword hunts the survivors while they extract valuables and escape. The host picks the killer in the lobby. Everyone needs the mod."
+versionNumber = "0.2.1"
+description = "Dead by Daylight inspired. One invulnerable killer with a sword hunts the survivors while they extract valuables and escape. The host picks the killer in the lobby. Everyone needs the mod."
 websiteUrl = "https://github.com/marinprusac/Hunted"
 containsNsfwContent = false
 

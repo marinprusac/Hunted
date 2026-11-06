@@ -77,6 +77,10 @@ internal static class KillerVision
     internal static bool IsRevealed(PlayerAvatar? player)
         => player != null && Spots.TryGetValue(player, out var spot) && (Time.time < spot.HurtUntil || (spot.Shown && spot.InRange));
 
+    /// <summary>Whether the killer can see this survivor right now (a crouching or crawling one may still be hidden from them). Only known on the killer's computer.</summary>
+    internal static bool IsSeen(PlayerAvatar? player)
+        => player != null && Spots.TryGetValue(player, out var spot) && (spot.Shown || Time.time < spot.HurtUntil);
+
     /// <summary>A survivor that was hurt cannot hide: they are visible for at least this long (never shortening a longer reveal).</summary>
     internal static void RevealHurt(PlayerAvatar player)
     {

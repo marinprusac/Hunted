@@ -213,8 +213,33 @@ internal static class Tuning
     }
 
     [Serializable]
+    internal class ChaseValues
+    {
+        /// <summary>The terror radius (metres): a living survivor this close to the killer hears a heartbeat, through walls. The killer never hears it.</summary>
+        public float TerrorRadius = 24f;
+        /// <summary>Seconds between heartbeats at the edge of the terror radius, and right next to the killer.</summary>
+        public float HeartbeatSlowSeconds = 1.1f;
+        public float HeartbeatFastSeconds = 0.45f;
+        /// <summary>How loud the heartbeat is right next to the killer (it is a third of that at the edge of the radius).</summary>
+        public float HeartbeatVolume = 0.9f;
+        /// <summary>A chase: the killer has a survivor in the open, within ChaseRange metres and in front of them (the cosine of the angle off their facing is at least ChaseViewDot).
+        /// It starts once that has lasted ChaseStartSeconds and ends ChaseLoseSeconds after it stopped. Both the killer and the chased survivor hear the chase music.</summary>
+        public float ChaseRange = 16f;
+        public float ChaseViewDot = 0.5f;
+        public float ChaseStartSeconds = 0.75f;
+        public float ChaseLoseSeconds = 6f;
+        /// <summary>The chase music's volume, and how long it takes to come in and to die away.</summary>
+        public float MusicVolume = 1f;
+        public float FadeInSeconds = 0.3f;
+        public float FadeOutSeconds = 3f;
+        /// <summary>A chase that starts within this many seconds of the music dying away picks the music up where it stopped, instead of from the top.</summary>
+        public float ResumeWithinSeconds = 20f;
+    }
+
+    [Serializable]
     private class Data
     {
+        public ChaseValues Chase = new();
         public SurvivorValues Survivor = new();
         public BotValues Bots = new();
         public BangerValues Banger = new();
@@ -236,6 +261,7 @@ internal static class Tuning
     private static Data _data = new();
 
     internal static VisionValues Vision => _data.Vision;
+    internal static ChaseValues Chase => _data.Chase;
     internal static KillerRoomValues KillerRoom => _data.KillerRoom;
     internal static BoostValues Boost => _data.Boost;
     internal static BangerValues Banger => _data.Banger;

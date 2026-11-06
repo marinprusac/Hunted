@@ -652,11 +652,10 @@ static class BotAvatarPatches
     {
         if (!SemiFunc.IsMasterClientOrSingleplayer())
             return false;
+        // The game's own loop, minus the bots (since R.E.P.O. v0.5.1 it no longer hands out player colours here).
         foreach (var player in BotAvatar.WithoutBots(GameDirector.instance.PlayerList))
-        {
-            __instance.PlayerAdd(player.steamID, player.playerName);
-            __instance.SetPlayerColor(player.steamID);
-        }
+            if (!string.IsNullOrEmpty(player.steamID))
+                __instance.PlayerAdd(player.steamID, player.playerName);
         return false;
     }
 }

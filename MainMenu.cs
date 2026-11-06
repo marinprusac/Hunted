@@ -24,6 +24,7 @@ static class MainMenuPatch
             else if (label != null)
                 Rename(button, label);
         }
+        MenuLook.Apply(__instance);
     }
 
     private static (bool hide, string? label) Classify(Button button)

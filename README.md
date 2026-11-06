@@ -1,7 +1,5 @@
 # Hunted
 
-> **Early development.** This mod is being worked on actively and changes often. Expect rough edges, and check the changelog when you update.
-
 An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **the killer**: invulnerable, fast, huge and armed with a sword. Everyone else is a **survivor** who has to fill the extraction points with valuables and escape in a truck.
 
 ![The killer in a hallway](https://raw.githubusercontent.com/marinprusac/Hunted/main/images/killer-hallway.jpg)
@@ -40,6 +38,8 @@ An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **t
 
 - Start with 200 health and slowly regenerate.
 - **Boost:** when revived, or hit down to half health or less, a survivor runs without tiring and cannot be tumbled for a few seconds.
+- **Heartbeat:** within about 24 m of the killer, survivors hear a heartbeat that speeds up as the killer gets closer.
+- **Chase music:** when the killer has a survivor in sight up close, both of them hear the chase music until the killer loses them.
 
 ## Bots
 
@@ -74,6 +74,11 @@ The config file is `BepInEx/config/Prussian.Hunted.cfg`. In a lobby, the host's 
 - Requires **BepInExPack** and **MenuLib**.
 - Mods that change the main menu, the lobby list, player cosmetics or level generation may conflict.
 - Please send bug reports with the host's `BepInEx/LogOutput.log`.
+
+## Credits
+
+- Menu music: "Ambient Horror Track 01" by Cleyton Kauffman (CC0, OpenGameArt).
+- Chase music: "The Hunt" by Sudocolon (CC0, OpenGameArt).
 
 ## License
 

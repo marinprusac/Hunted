@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1
+
+- Works with R.E.P.O. v0.5.1: hosting a game no longer fails.
+- New: survivors hear a heartbeat when the killer is near, and chase music plays when the killer has a survivor in sight.
+- New main menu: a picture of the killer, a "Hunted" title and its own music, instead of the driving truck.
+- The killer is white again, with red armour, teeth, belt and grabber, and looks the same in their Escape menu.
+- New icon.
+
 ## 0.2.0
 
 **Bots**

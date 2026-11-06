@@ -33,6 +33,8 @@ internal static class KillerLook
     private static bool IsSkeleton(CosmeticAsset? asset) => asset != null
         && (asset.name.IndexOf("skeleton", System.StringComparison.OrdinalIgnoreCase) >= 0 || asset.name.IndexOf("skull belt", System.StringComparison.OrdinalIgnoreCase) >= 0);
 
+    private static bool IsOverlay(CosmeticAsset? asset) => asset != null && asset.name.IndexOf("overlay", System.StringComparison.OrdinalIgnoreCase) >= 0;
+
     /// <summary>The game's indices of every skeleton cosmetic (overlays, armor, teeth, grabber) and the skull belt.</summary>
     internal static int[] SkeletonIndices()
     {
@@ -54,9 +56,36 @@ internal static class KillerLook
     {
         if (!KillerRole.ModeActive || KillerRole.KillerSteamId == null)
             return false;
+        if (cosmetics.playerAvatarVisuals != null && cosmetics.playerAvatarVisuals.isMenuAvatar)
+            return IsKillersEscAvatar(cosmetics.playerAvatarVisuals);
         var avatar = cosmetics.playerAvatarVisuals != null && !cosmetics.playerAvatarVisuals.isMenuAvatar ? cosmetics.playerAvatarVisuals.playerAvatar
             : cosmetics.deathHead != null ? cosmetics.deathHead.playerAvatar : null;
         return avatar != null && KillerRole.IsKiller(avatar);
+    }
+
+    /// <summary>
+    /// The picture of yourself in the Escape menu, when you are the killer: it shows you as you are in the round. The avatar in the cosmetics page
+    /// is left alone, since that is where you pick the outfit you wear as a survivor.
+    /// </summary>
+    private static bool IsKillersEscAvatar(PlayerAvatarVisuals visuals)
+    {
+        var menu = visuals.playerAvatarMenu;
+        if (menu == null || menu.worldAvatar || menu.iconMakerAvatar || menu.expressionAvatar || menu.parentPage == null || menu.parentPage.GetComponent<MenuPageEsc>() == null)
+            return false;
+        var local = SemiFunc.PlayerAvatarLocal();
+        return local != null && KillerRole.IsKiller(local);
+    }
+
+    /// <summary>The menu avatar's eyes, as the killer's: plain glowing red circles (no light, it is only a picture).</summary>
+    internal static void RedEyes(PlayerAvatarVisuals visuals)
+    {
+        var eyes = visuals.playerEyes;
+        if (eyes == null)
+            return;
+        foreach (var part in new[] { eyes.eyeLeft, eyes.eyeRight, eyes.pupilLeft, eyes.pupilRight })
+            if (part != null)
+                foreach (var renderer in part.GetComponentsInChildren<Renderer>(true))
+                    Tint(renderer, new Color(1f, 0f, 0f, 1f), Tuning.Killer.EyeGlow);
     }
 
     internal static void Tick(float dt)
@@ -92,9 +121,13 @@ internal static class KillerLook
             if (material == null || eyeParts.Any(e => e != null && part!.transform.IsChildOf(e)))
                 continue;
             var albedo = material.HasProperty("_AlbedoColor") ? material.GetColor("_AlbedoColor") : Color.white;
-            var colour = part!.cosmetic != null ? CosmeticRed : Color.white; // cosmetic items know their cosmetic; the body does not
+            // The skeleton overlays wrap the body parts and draw the bones on them: they are part of the white body and keep their picture.
+            // The other cosmetic items (armour, teeth, belt, grabber) are red and plain.
+            var overlay = part!.cosmetic != null && IsOverlay(part.cosmetic.cosmeticAsset);
+            var colour = part.cosmetic != null && !overlay ? CosmeticRed : Color.white; // cosmetic items know their cosmetic; the body does not
             SetColor(material, "_AlbedoColor", new Color(colour.r, colour.g, colour.b, albedo.a));
-            SetTexture(material, "_AlbedoTexture", Texture2D.whiteTexture);
+            if (!overlay)
+                SetTexture(material, "_AlbedoTexture", Texture2D.whiteTexture);
             if (part.tintType != PlayerMaterial.TintType.Albedo)
                 SetColor(material, "_EmissionColor", Color.black); // a glow in the player's colour would stay coloured
             if (part.tintFresnel)
@@ -222,13 +255,21 @@ static class KillerLookPatches
     private static void SetupColors_Postfix(PlayerCosmetics __instance)
     {
         if (KillerLook.BelongsToKiller(__instance))
+        {
             KillerLook.WhitenOutfit(__instance);
+            if (__instance.playerAvatarVisuals != null && __instance.playerAvatarVisuals.isMenuAvatar)
+                KillerLook.RedEyes(__instance.playerAvatarVisuals);
+        }
     }
 
     [HarmonyPostfix, HarmonyPatch(typeof(PlayerCosmetics), "SetupColorsAllLogic")]
     private static void SetupColorsAll_Postfix(PlayerCosmetics __instance)
     {
         if (KillerLook.BelongsToKiller(__instance))
+        {
             KillerLook.WhitenOutfit(__instance);
+            if (__instance.playerAvatarVisuals != null && __instance.playerAvatarVisuals.isMenuAvatar)
+                KillerLook.RedEyes(__instance.playerAvatarVisuals);
+        }
     }
 }

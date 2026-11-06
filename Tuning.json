@@ -100,5 +100,19 @@
   },
   "Boost": {
     "HealthFraction": 0.5
+  },
+  "Chase": {
+    "TerrorRadius": 24,
+    "HeartbeatSlowSeconds": 1.1,
+    "HeartbeatFastSeconds": 0.45,
+    "HeartbeatVolume": 0.9,
+    "ChaseRange": 16,
+    "ChaseViewDot": 0.5,
+    "ChaseStartSeconds": 0.75,
+    "ChaseLoseSeconds": 6,
+    "MusicVolume": 1,
+    "FadeInSeconds": 0.3,
+    "FadeOutSeconds": 3,
+    "ResumeWithinSeconds": 20
   }
 }

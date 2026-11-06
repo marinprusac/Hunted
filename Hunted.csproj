@@ -5,7 +5,7 @@
     <LangVersion>12</LangVersion>
     <Nullable>enable</Nullable>
     <Authors>Prussian</Authors>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Compile against the installed game (Unity 6 + current Assembly-CSharp) instead of the older NuGet game libs. -->
     <EnableGameReferences>true</EnableGameReferences>
@@ -29,6 +29,12 @@
     <EmbeddedResource Include="Defaults.json" LogicalName="Hunted.Defaults.json" />
     <!-- The picture of the bomber head in the killer's inventory. -->
     <EmbeddedResource Include="BangerIcon.png" LogicalName="Hunted.BangerIcon.png" />
+    <!-- The main menu's background: the killer in a hallway. -->
+    <EmbeddedResource Include="MenuBackground.jpg" LogicalName="Hunted.MenuBackground.jpg" />
+    <!-- The main menu's music: "Ambient Horror Track 01" by Cleyton Kauffman (CC0), from OpenGameArt. -->
+    <EmbeddedResource Include="MenuMusic.ogg" LogicalName="Hunted.MenuMusic.ogg" />
+    <!-- The chase music: "The Hunt" by Sudocolon (CC0), from OpenGameArt. -->
+    <EmbeddedResource Include="ChaseMusic.ogg" LogicalName="Hunted.ChaseMusic.ogg" />
   </ItemGroup>
 
   <!-- Add Package Sources -->

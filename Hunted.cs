@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Hunted;
 
 [BepInDependency("nickklmao.menulib")]
-[BepInPlugin("Prussian.Hunted", "Hunted", "0.2.0")]
+[BepInPlugin("Prussian.Hunted", "Hunted", "0.2.1")]
 public class Hunted : BaseUnityPlugin
 {
     internal static Hunted Instance { get; private set; } = null!;
@@ -78,6 +78,7 @@ public class Hunted : BaseUnityPlugin
         KillerBody.Tick();
         KillerLook.Tick(Time.deltaTime);
         SurvivorReveal.Tick(Time.deltaTime);
+        ChaseMusic.Tick(Time.deltaTime);
         _extractionTimer -= Time.unscaledDeltaTime;
         if (_extractionTimer <= 0f)
         {
