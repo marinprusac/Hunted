@@ -1,6 +1,17 @@
 {
-  "Killer": {
-    "WalkSpeedMultiplier": 2
+  "Skelespawn": {
+    "WalkSpeedMultiplier": 2.0,
+    "BomberSecondsPerUse": 30
+  },
+  "Everseer": {
+    "WalkSpeedMultiplier": 1.8,
+    "LaserDamage": 30,
+    "LaserRange": 22.5,
+    "LaserChargeSeconds": 1.25,
+    "LaserShots": 8,
+    "StaffSecondsPerUse": 30,
+    "EyeSightRange": 20,
+    "EyeHoldSeconds": 5.0
   },
   "Extraction": {
     "TimeLimitMinutes": 15,
@@ -20,5 +31,8 @@
   "Vision": {
     "KillerFogStart": 5,
     "KillerFogEnd": 30
+  },
+  "Chase": {
+    "Heartbeat": true
   }
 }

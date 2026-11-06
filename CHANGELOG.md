@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1
+
+- Everseer's laser does 30 damage instead of 40, reaches 22.5 m instead of 30, and takes 1.25 seconds to build up instead of 1.
+- Everseer walks at 1.8 times a player's speed; Skelespawn stays at 2.
+- New settings, adjustable in game with REPOConfig: each killer's walking speed, the bomber head and staff recharge times, and the laser's damage, range, build-up time and shots, and the eyes' sight range and hold time. `Killer / WalkSpeedMultiplier` is replaced by `Skelespawn / WalkSpeedMultiplier`; set it again if you had changed it.
+- The killer hears their own sounds at normal volume; only survivors hear them louder. They still sound deeper to everyone.
+- New setting `Chase / Heartbeat`: turn it off and survivors no longer hear the heartbeat.
+- The chase sting and music start sooner once the killer has a survivor in sight.
+
 ## 0.3.0
 
 - New killer: **Everseer**, a purple druid in a mask and antlers with its own chase music. The first killer is now called **Skelespawn**.

@@ -46,7 +46,7 @@ internal partial class Bot
                 return;
             _eyeSpotted = inView;
             _eyeGlimpsed = null;
-            _eyeTouchAt = Time.time + Random.Range(0.4f, 1f) + Tuning.Everseer.EyeHoldSeconds; // a moment to react, then the hold
+            _eyeTouchAt = Time.time + Random.Range(0.4f, 1f) + HuntedConfig.EyeHoldSeconds.Value; // a moment to react, then the hold
             DebugNote("notices a planted eye");
             return;
         }

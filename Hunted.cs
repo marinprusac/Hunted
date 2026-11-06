@@ -8,7 +8,7 @@ namespace Hunted;
 [BepInDependency("nickklmao.menulib")]
 // REPOConfig (in-game settings) is optional: mod managers install it with Hunted, and Hunted works without it.
 [BepInDependency("nickklmao.repoconfig", BepInDependency.DependencyFlags.SoftDependency)]
-[BepInPlugin("Prussian.Hunted", "Hunted", "0.3.0")]
+[BepInPlugin("Prussian.Hunted", "Hunted", "0.3.1")]
 public class Hunted : BaseUnityPlugin
 {
     internal static Hunted Instance { get; private set; } = null!;

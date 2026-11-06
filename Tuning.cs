@@ -89,7 +89,7 @@ internal static class Tuning
         /// <summary>How fast the sword must move to count as a swing. Replaces the game's value (1.15 for the sword); lower is easier to swing.</summary>
         public float SwingDetectMultiplier = 0.5f;
         /// <summary>The killer's walking speed while the sword is in their hands, as a multiple of a survivor's walking speed (1 = the same as a survivor; the killer room's boost still adds to it).
-        /// Stowing the sword gives the killer their own, faster walk back (Killer / WalkSpeedMultiplier in the config).</summary>
+        /// Stowing the sword gives the killer their own, faster walk back (Skelespawn / WalkSpeedMultiplier and Everseer / WalkSpeedMultiplier in the config).</summary>
         public float HeldSpeedMultiplier = 0.75f;
         /// <summary>Size of the sword compared to the game's (1 = the game's). Its hit box and reach grow with it, and everyone sees the same size.</summary>
         public float Scale = 1.7f;
@@ -180,7 +180,6 @@ internal static class Tuning
     {
         /// <summary>How many bomber heads (the game's Bang monster) the killer can have ready at most, and how long one takes to come back (the killer room recharges faster).</summary>
         public int MaxUses = 3;
-        public float SecondsPerUse = 30f;
         public float RoomRechargeMultiplier = 2f;
         /// <summary>How much harder a bomber head's explosion hits compared to the game's, and how many seconds its fuse burns (the game's is 15).</summary>
         public float DamageMultiplier = 3f;
@@ -199,14 +198,6 @@ internal static class Tuning
     {
         /// <summary>How fast the Everseer walks while its mask is on, as a multiple of a survivor's walking speed.</summary>
         public float MaskSpeedMultiplier = 0.75f;
-        /// <summary>How many laser shots a full charge holds (one bar each; a shot costs one whether it hits anybody or not). The charge also drains slowly over
-        /// time and recharges in the killer room, at the sword's rates (the Sword settings EnergyDrainPerSecond and ChargePerSecond, in percent).</summary>
-        public int LaserShots = 8;
-        /// <summary>How long the laser takes to build up after the right mouse button, and how long it then fires.</summary>
-        public float LaserBootSeconds = 1f;
-        public float LaserShotSeconds = 2f;
-        /// <summary>Damage per hit, and how often a survivor standing in the beam is hit again. More in the killer room, as the sword.</summary>
-        public float LaserDamage = 40f;
         /// <summary>How hard a hit knocks a survivor back, how hard it throws them into a tumble, and for how long.</summary>
         public float LaserKnockback = 30f;
         public float LaserTumbleForce = 25f;
@@ -217,24 +208,20 @@ internal static class Tuning
         public float LaserLight = 2f;
         /// <summary>How wide an extra solid line down the middle of each beam is, in metres (times the thickness above); 0 for none, the cart laser's beam as it is.</summary>
         public float LaserCoreWidth = 0f;
+        /// <summary>How long the laser fires, and how often a survivor standing in the beam is hit again. Its damage, range and build-up are settings (HuntedConfig).</summary>
+        public float LaserShotSeconds = 2f;
         public float LaserHitCooldown = 0.3f;
-        public float LaserRange = 30f;
         /// <summary>How the beams look on the killer's own screen, compared to what everyone else sees: thinner and mostly see-through, so they do not block the view.</summary>
         public float LaserOwnThickness = 1f;
         public float LaserOwnAlpha = 0.6f;
         /// <summary>The wand (the game's Void staff): how many charges it holds, and how long one takes to come back (faster in the killer room).</summary>
         public int WandMaxUses = 3;
-        public float WandSecondsPerUse = 30f;
         public float WandRoomRechargeMultiplier = 2f;
         /// <summary>How loud the wand is, and how bright its flashes, compared to the game's Void staff.</summary>
         public float WandVolume = 0.35f;
         public float WandFlash = 0.3f;
-        /// <summary>How far a planted eye sees.</summary>
-        public float EyeSightRange = 20f;
         /// <summary>A survivor can touch (and so destroy) an eye from any distance, by grabbing at it; this is how big an eye counts for that, in metres.</summary>
         public float EyeTouchRadius = 0.3f;
-        /// <summary>How long a survivor has to hold the grab button on an eye to destroy it.</summary>
-        public float EyeHoldSeconds = 5f;
         /// <summary>A bot notices an eye after it has had it in plain view in front of it, within this many metres, for about this many seconds (give or take 40%).</summary>
         public float BotEyeNoticeRange = 12f;
         public float BotEyeNoticeSeconds = 3f;
@@ -279,7 +266,7 @@ internal static class Tuning
         /// It starts once that has lasted ChaseStartSeconds and ends ChaseLoseSeconds after it stopped. Both the killer and the chased survivor hear the chase music.</summary>
         public float ChaseRange = 16f;
         public float ChaseViewDot = 0.5f;
-        public float ChaseStartSeconds = 0.75f;
+        public float ChaseStartSeconds = 0.35f;
         public float ChaseLoseSeconds = 6f;
         /// <summary>The chase music's volume, and how long it takes to come in and to die away.</summary>
         public float MusicVolume = 1f;

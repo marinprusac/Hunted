@@ -156,7 +156,7 @@ internal static class KillerStaff
         // A charge comes back every so often (faster in the killer room), and nothing else drains it.
         battery.autoDrain = false;
         var values = Tuning.Everseer;
-        var rate = 100f / Mathf.Max(0.1f, values.WandSecondsPerUse) / Mathf.Max(1, values.WandMaxUses)
+        var rate = 100f / Mathf.Max(0.1f, HuntedConfig.StaffSecondsPerUse.Value) / Mathf.Max(1, values.WandMaxUses)
                    * (KillerRoom.Contains(killer.transform.position) ? values.WandRoomRechargeMultiplier : 1f);
         if (battery.batteryLife < 100f)
             battery.ReceiveCharge(rate * dt);

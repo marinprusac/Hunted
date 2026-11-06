@@ -175,7 +175,7 @@ internal static class PlantedEyes
 
     private static void Look()
     {
-        var range = Tuning.Everseer.EyeSightRange;
+        var range = HuntedConfig.EyeSightRange.Value;
         var survivors = SemiFunc.PlayerGetList().Where(p => p != null && !KillerRole.IsKiller(p) && !p.isDisabled && !p.deadSet).ToList();
         foreach (var eye in All)
         {
@@ -261,7 +261,7 @@ internal static class PlantedEyes
             _held = eye;
             _heldFor = 0f;
         }
-        var seconds = Mathf.Max(0.1f, Tuning.Everseer.EyeHoldSeconds);
+        var seconds = Mathf.Max(0.1f, HuntedConfig.EyeHoldSeconds.Value);
         if (_held != null)
         {
             _heldFor += dt;

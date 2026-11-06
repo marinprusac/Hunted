@@ -105,7 +105,7 @@ internal static class Banger
         var player = PlayerController.instance;
         if (player == null)
             return;
-        var rate = 1f / Mathf.Max(0.1f, Tuning.Banger.SecondsPerUse) * (KillerRoom.Contains(player.transform.position) ? Tuning.Banger.RoomRechargeMultiplier : 1f);
+        var rate = 1f / Mathf.Max(0.1f, HuntedConfig.BomberSecondsPerUse.Value) * (KillerRoom.Contains(player.transform.position) ? Tuning.Banger.RoomRechargeMultiplier : 1f);
         _uses = Mathf.Min(max, _uses + rate * dt);
         _cooldown -= dt;
 
@@ -536,7 +536,7 @@ internal static class Banger
             agent.Warp(hit.position);
 
         var controller = PlayerController.instance;
-        var speed = (controller != null && controller.playerOriginalMoveSpeed > 0f ? controller.playerOriginalMoveSpeed : 2f) * HuntedConfig.KillerWalkSpeedMultiplier.Value;
+        var speed = (controller != null && controller.playerOriginalMoveSpeed > 0f ? controller.playerOriginalMoveSpeed : 2f) * HuntedConfig.KillerWalkSpeed;
         banger.enemy.NavMeshAgent.OverrideAgent(speed, speed * 4f, 0.25f);
 
         var fusing = banger.fuseActive || banger.currentState == EnemyBang.State.FuseDelay || banger.currentState == EnemyBang.State.Fuse;

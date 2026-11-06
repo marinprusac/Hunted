@@ -86,7 +86,7 @@ internal static class ChaseMusic
         if (_music != null && _music.isPlaying && LevelMusic.instance != null)
             LevelMusic.instance.Interrupt(5f); // the game's own music makes way, as the other layers do in Dead by Daylight
 
-        if (local != killer)
+        if (local != killer && HuntedConfig.Heartbeat.Value)
             Heartbeat(killer, local!, dt);
     }
 

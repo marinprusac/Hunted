@@ -173,7 +173,7 @@ internal partial class Bot
     private static float StaminaSeconds => (PlayerController.instance != null ? PlayerController.instance.EnergyStart : Tuning.Survivor.Stamina) / SprintDrain;
     private static float StaminaRecovery => (PlayerController.instance != null ? PlayerController.instance.sprintRechargeAmount : 2f) / SprintDrain;
 
-    private static float KillerTopSpeed => WalkSpeed * HuntedConfig.KillerWalkSpeedMultiplier.Value;
+    private static float KillerTopSpeed => WalkSpeed * HuntedConfig.KillerWalkSpeed;
 
     /// <summary>How close the killer could be by now: where they were last noticed, less how far they may have walked since (half speed: they rarely come straight here).</summary>
     private float KillerDistance

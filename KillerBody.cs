@@ -270,10 +270,14 @@ static class KillerSoundPatch
         __state = (__instance.Volume, __instance.Pitch, false);
         if (!KillerRole.ModeActive || (KillerBody.Heavy <= 0 && !KillerBody.IsKillerSound(__instance)))
             return;
-        __instance.Volume *= Tuning.Killer.SoundVolumeMultiplier;
         __instance.Pitch *= Tuning.Killer.SoundPitchMultiplier;
-        // The distances at which the sound starts to fade and is gone grow too, so it carries further.
-        falloffMultiplier *= Tuning.Killer.SoundRangeMultiplier;
+        // Louder and carrying further only for the survivors: the killer hears their own sounds at the game's volume (only deeper).
+        if (!KillerRole.LocalIsKiller)
+        {
+            __instance.Volume *= Tuning.Killer.SoundVolumeMultiplier;
+            // The distances at which the sound starts to fade and is gone grow too, so it carries further.
+            falloffMultiplier *= Tuning.Killer.SoundRangeMultiplier;
+        }
         __state.changed = true;
     }
 
@@ -297,7 +301,8 @@ static class KillerLoopSoundPatch
         if (!KillerRole.ModeActive || !KillerBody.IsKillerSound(__instance))
             return;
         pitchMultiplier *= Tuning.Killer.SoundPitchMultiplier;
-        volumeMultiplier *= Tuning.Killer.SoundVolumeMultiplier;
+        if (!KillerRole.LocalIsKiller)
+            volumeMultiplier *= Tuning.Killer.SoundVolumeMultiplier;
     }
 }
 

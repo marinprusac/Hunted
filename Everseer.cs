@@ -76,7 +76,7 @@ internal static class Everseer
         PlantedEyes.Reset();
     }
 
-    private static float ShotCost => 100f / Mathf.Max(1, Tuning.Everseer.LaserShots);
+    private static float ShotCost => 100f / Mathf.Max(1, HuntedConfig.LaserShots.Value);
     private static int ShotsReady => Mathf.FloorToInt(_energy / ShotCost + 0.0001f);
 
     internal static void Tick(float dt)
@@ -191,7 +191,7 @@ internal static class Everseer
         var player = PlayerController.instance;
         var filling = player != null && KillerRoom.Contains(player.transform.position) && _energy < 100f;
         // One bar a shot: a bar that shows is a shot that can be fired.
-        PseudoSlot.Draw(spot, PseudoSlot.Icon("Hunted.MaskIcon.png"), Mathf.Max(1, Tuning.Everseer.LaserShots), ShotsReady, filling, MaskOn);
+        PseudoSlot.Draw(spot, PseudoSlot.Icon("Hunted.MaskIcon.png"), Mathf.Max(1, HuntedConfig.LaserShots.Value), ShotsReady, filling, MaskOn);
     }
 
     private static void SetLaser(int state)
@@ -199,7 +199,7 @@ internal static class Everseer
         var values = Tuning.Everseer;
         if (_laser == state)
             return;
-        _laserTimer = state == Boot ? values.LaserBootSeconds : state == Fire ? values.LaserShotSeconds : 0f;
+        _laserTimer = state == Boot ? HuntedConfig.LaserChargeSeconds.Value : state == Fire ? values.LaserShotSeconds : 0f;
         ApplyLaser(state);
         if (SemiFunc.IsMultiplayer())
             PhotonNetwork.RaiseEvent(LaserEvent, new object[] { state }, new RaiseEventOptions { Receivers = ReceiverGroup.Others }, SendOptions.SendReliable);
@@ -271,7 +271,7 @@ internal static class Everseer
         if (killer == null || killer.isDisabled)
             return;
         Find();
-        var boot = Mathf.Clamp01((Time.time - _laserSince) / Mathf.Max(0.1f, Tuning.Everseer.LaserBootSeconds));
+        var boot = Mathf.Clamp01((Time.time - _laserSince) / Mathf.Max(0.1f, HuntedConfig.LaserChargeSeconds.Value));
         // How strong the purple is: it grows while the laser builds up and throbs once it is ready.
         var strength = !MaskOn ? 0f : _laser == Boot ? Mathf.Lerp(0.4f, 0.8f, boot) : _laser == Ready ? 0.85f + 0.15f * Mathf.Sin(Time.time * 12f) : 0.6f;
         // The killer's own screen turns purple while the mask is on.
@@ -346,7 +346,7 @@ internal static class Everseer
             KillerBody.AddSound(_buildupLoop);
         }
         _buildupSource.transform.position = EyePosition(killer, 0);
-        var boot = Mathf.Max(0.1f, Tuning.Everseer.LaserBootSeconds);
+        var boot = Mathf.Max(0.1f, HuntedConfig.LaserChargeSeconds.Value);
         _buildupLoop!.PlayLoop(_laser == Boot, 5f, 5f, Mathf.Lerp(0.8f, 1.4f, Mathf.Clamp01((Time.time - _laserSince) / boot)));
     }
 
@@ -443,8 +443,8 @@ internal static class Everseer
         if (killer.localCamera == null)
             return;
         var aim = killer.localCamera.transform;
-        var reach = aim.position + aim.forward * Tuning.Everseer.LaserRange;
-        var hitting = Physics.Raycast(aim.position + aim.forward * 0.5f, aim.forward, out var hit, Tuning.Everseer.LaserRange, SightMask, QueryTriggerInteraction.Ignore);
+        var reach = aim.position + aim.forward * HuntedConfig.LaserRange.Value;
+        var hitting = Physics.Raycast(aim.position + aim.forward * 0.5f, aim.forward, out var hit, HuntedConfig.LaserRange.Value, SightMask, QueryTriggerInteraction.Ignore);
         var end = hitting ? hit.point : reach;
         for (var i = 0; i < 3; i++)
         {
@@ -507,7 +507,7 @@ internal static class Everseer
     private static void Configure(HurtCollider hurt, int index, PlayerAvatar killer)
     {
         hurt.playerLogic = index == Reach;
-        hurt.playerDamage = Mathf.RoundToInt(Tuning.Everseer.LaserDamage * (KillerRoom.Contains(killer.transform.position) ? Tuning.Killer.KillerRoomEmpowerment : 1f));
+        hurt.playerDamage = Mathf.RoundToInt(HuntedConfig.LaserDamage.Value * (KillerRoom.Contains(killer.transform.position) ? Tuning.Killer.KillerRoomEmpowerment : 1f));
         hurt.playerDamageCooldown = Tuning.Everseer.LaserHitCooldown;
         hurt.playerKill = false;
         // It knocks a survivor back and tumbles them (a boosted one cannot be tumbled).

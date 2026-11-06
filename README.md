@@ -47,7 +47,7 @@ An asymmetric mode for R.E.P.O., inspired by Dead by Daylight. One player is **t
 
 - Start with 200 health and slowly regenerate.
 - **Boost:** when revived, or hit down to half health or less, a survivor runs without tiring and cannot be tumbled for a few seconds. Their screen turns gold while it lasts.
-- **Heartbeat:** within about 24 m of the killer, survivors hear a heartbeat that speeds up as the killer gets closer.
+- **Heartbeat:** within about 24 m of the killer, survivors hear a heartbeat that speeds up as the killer gets closer (the host can turn it off).
 - **Chase music:** when the killer has a survivor in sight up close, both of them hear a shock sound and then the chase music until the killer loses them.
 
 ## Bots
@@ -66,7 +66,16 @@ The config file is `BepInEx/config/Prussian.Hunted.cfg`. In a lobby, the host's 
 
 | Setting | Default | What it does |
 |---|---|---|
-| Killer / WalkSpeedMultiplier | 2 | Killer walking speed relative to a normal player |
+| Skelespawn / WalkSpeedMultiplier | 2 | Skelespawn's walking speed relative to a normal player |
+| Skelespawn / BomberSecondsPerUse | 30 | Seconds for a bomber head to come back |
+| Everseer / WalkSpeedMultiplier | 1.8 | Everseer's walking speed relative to a normal player, mask closed |
+| Everseer / LaserDamage | 30 | Damage per laser hit |
+| Everseer / LaserRange | 22.5 | How far the laser reaches, in metres |
+| Everseer / LaserChargeSeconds | 1.25 | Build-up time before the laser can fire |
+| Everseer / LaserShots | 8 | Shots a full mask charge holds |
+| Everseer / StaffSecondsPerUse | 30 | Seconds for a staff charge to come back |
+| Everseer / EyeSightRange | 20 | How far an eye sees, in metres |
+| Everseer / EyeHoldSeconds | 5 | Grab time needed to destroy an eye |
 | Extraction / GoalPerPointInHundreds | 150 | Value that completes an extraction point, in hundreds of dollars (150 is $15,000) |
 | Extraction / TimeLimitMinutes | 15 | The killer wins when this runs out |
 | Survivor / MaxHealth | 200 | Health everyone starts with |
@@ -76,6 +85,7 @@ The config file is `BepInEx/config/Prussian.Hunted.cfg`. In a lobby, the host's 
 | Sword / EnergyPerSurvivorHit | 10 | Sword energy lost per hit (out of 100) |
 | Sword / EnergyDrainPerSecond | 0.55 | Sword energy lost per second |
 | Sword / ChargePerSecond | 10 | Sword energy regained per second in the killer room |
+| Chase / Heartbeat | On | Survivors hear a heartbeat when the killer is near |
 | Vision / KillerFogStart, KillerFogEnd | 5, 30 | The killer's fog distances |
 
 ## Compatibility

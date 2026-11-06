@@ -41,7 +41,7 @@ static class KillerPatches
         __state = __instance.MoveSpeed;
         // With the sword in their hands the killer walks at a survivor's pace (MoveSpeed is the survivor's walk); stowed, at their own faster walk.
         // The Everseer walks at 75% of a survivor's pace with its mask on.
-        _speedFactor = (KillerWeapon.Held ? Tuning.Sword.HeldSpeedMultiplier : Everseer.MaskOn ? Tuning.Everseer.MaskSpeedMultiplier : HuntedConfig.KillerWalkSpeedMultiplier.Value)
+        _speedFactor = (KillerWeapon.Held ? Tuning.Sword.HeldSpeedMultiplier : Everseer.MaskOn ? Tuning.Everseer.MaskSpeedMultiplier : HuntedConfig.KillerWalkSpeed)
             * (KillerRoom.Contains(__instance.transform.position) ? Tuning.Killer.KillerRoomEmpowerment : 1f);
         __instance.MoveSpeed = __state * _speedFactor;
     }
